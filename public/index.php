@@ -5,6 +5,14 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Fix subdirectory deployment via Apache Alias (/sb)
+if (isset($_SERVER['REQUEST_URI'])) {
+    $base = '/sb';
+    if (strpos($_SERVER['REQUEST_URI'], $base) === 0) {
+        $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], strlen($base)) ?: '/';
+    }
+}
+
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;
