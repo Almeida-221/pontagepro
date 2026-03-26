@@ -208,13 +208,13 @@ class OuvrierController extends Controller
             ->orderBy('name')->get();
 
         $query = User::where('company_id', $company->id)
-            ->where('role', 'worker')
+            ->whereIn('role', ['worker', 'manager'])
             ->orderBy('name');
 
         if ($categoryFilter)  $query->where('category_id',  $categoryFilter);
         if ($professionFilter) $query->where('profession_id', $professionFilter);
 
-        $ouvriers = User::where('company_id', $company->id)->where('role', 'worker')->orderBy('name')->get();
+        $ouvriers = User::where('company_id', $company->id)->whereIn('role', ['worker', 'manager'])->orderBy('name')->get();
         $ouvriersFiltres = $query->get();
 
         $stats = $ouvriersFiltres
