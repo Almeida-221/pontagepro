@@ -300,6 +300,25 @@ class SecPointageController extends Controller
             'responded_at' => now(),
         ]);
 
+        // Notifier l'agent que sa présence a été enregistrée par scan
+        $tourLabel = $pointage->tour ? ucfirst($pointage->tour) : '';
+        $msg = $tourLabel
+            ? "Votre présence a été enregistrée par scan. Tour : $tourLabel."
+            : "Votre présence a été enregistrée par scan.";
+        SecNotification::notifier(
+            $agent->id,
+            'scan',
+            '✅ Présence enregistrée',
+            $msg,
+            ['pointage_id' => $pointage->id, 'tour' => $pointage->tour ?? '']
+        );
+        if ($agent->fcm_token) {
+            FcmService::sendToTokens([$agent->fcm_token], '✅ Présence enregistrée', $msg, [
+                'type'        => 'scan',
+                'pointage_id' => (string) $pointage->id,
+            ]);
+        }
+
         return response()->json([
             'message'         => 'Présence enregistrée.',
             'already_scanned' => false,
@@ -406,6 +425,25 @@ class SecPointageController extends Controller
             'status'       => 'present',
             'responded_at' => now(),
         ]);
+
+        // Notifier l'agent que sa confirmation a bien été enregistrée
+        $tourLabel = ucfirst($pointage->tour ?? '');
+        $confirmMsg = $tourLabel
+            ? "Votre présence pour le tour $tourLabel a été confirmée."
+            : "Votre présence a été confirmée.";
+        SecNotification::notifier(
+            $agent->id,
+            'pointage_confirme',
+            '✅ Présence confirmée',
+            $confirmMsg,
+            ['pointage_id' => $pointage->id, 'tour' => $pointage->tour ?? '']
+        );
+        if ($agent->fcm_token) {
+            FcmService::sendToTokens([$agent->fcm_token], '✅ Présence confirmée', $confirmMsg, [
+                'type'        => 'pointage_confirme',
+                'pointage_id' => (string) $pointage->id,
+            ]);
+        }
 
         return response()->json(['message' => 'Présence confirmée.']);
     }
