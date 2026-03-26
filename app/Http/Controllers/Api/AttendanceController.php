@@ -89,7 +89,7 @@ class AttendanceController extends Controller
             $worker->increment('balance', $earned);
         }
 
-        // Notification in-app pour l'ouvrier
+        // Notification in-app pour l'ouvrier/gérant
         $dateFr = Carbon::parse($attendance->date)->locale('fr')->isoFormat('dddd D MMMM');
         $montantFmt = number_format((float)$earned, 0, ',', ' ');
         SecNotification::notifier(
@@ -98,6 +98,12 @@ class AttendanceController extends Controller
             'Journée validée ✅',
             "Votre journée du $dateFr a été validée. Vous avez gagné $montantFmt FCFA. Bonne soirée !",
             ['attendance_id' => $attendance->id, 'amount' => (float)$earned, 'date' => $attendance->date->toDateString()]
+        );
+
+        // Synchroniser avec ouvrier_pointages pour l'interface web admin
+        \App\Models\OuvrierPointage::updateOrCreate(
+            ['user_id' => $worker->id, 'date' => $today],
+            ['company_id' => $scanner->company_id, 'statut' => 'present', 'initiated_by' => $scanner->id]
         );
 
         return response()->json(['attendance' => $attendance->fresh()->toApiArray()]);
