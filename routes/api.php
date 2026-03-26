@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Company users (managers & workers)
     Route::get('/company/users', [CompanyUserController::class, 'index']);
     Route::post('/company/users', [CompanyUserController::class, 'store']);
+    Route::put('/company/users/{user}', [CompanyUserController::class, 'update']);
     Route::post('/company/users/{user}/toggle', [CompanyUserController::class, 'toggleActive']);
     Route::delete('/company/users/{user}', [CompanyUserController::class, 'destroy']);
 

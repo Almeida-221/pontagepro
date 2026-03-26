@@ -34,7 +34,8 @@ class CompanyUserController extends Controller
             'profession_name'   => $u->profession?->name,
             'category_id'       => $u->category_id,
             'category_name'     => $u->category?->name,
-            'daily_rate'        => $u->category?->daily_rate,
+            'daily_rate'        => $u->taux_journalier > 0 ? (float)$u->taux_journalier : $u->category?->daily_rate,
+            'taux_journalier'   => (float)($u->taux_journalier ?? 0),
             'balance'           => (float) ($u->balance ?? 0),
             'photo_url'         => $this->photoUrl($u->photo),
             'id_photo_url'      => $this->photoUrl($u->id_photo_front),
@@ -66,14 +67,15 @@ class CompanyUserController extends Controller
         $allowedRoles = $creatorRole === 'manager' ? ['worker'] : ['manager', 'worker'];
 
         $validated = $request->validate([
-            'name'          => 'required|string|max:100',
-            'phone'         => 'required|string|max:20',
-            'role'          => ['required', \Illuminate\Validation\Rule::in($allowedRoles)],
-            'address'       => 'nullable|string|max:255',
-            'profession_id' => 'nullable|integer|exists:professions,id',
-            'category_id'   => 'nullable|integer|exists:worker_categories,id',
-            'photo'         => 'nullable|image|max:5120',
-            'id_photo'      => 'nullable|image|max:5120',
+            'name'             => 'required|string|max:100',
+            'phone'            => 'required|string|max:20',
+            'role'             => ['required', \Illuminate\Validation\Rule::in($allowedRoles)],
+            'address'          => 'nullable|string|max:255',
+            'profession_id'    => 'nullable|integer|exists:professions,id',
+            'category_id'      => 'nullable|integer|exists:worker_categories,id',
+            'taux_journalier'  => 'nullable|numeric|min:0',
+            'photo'            => 'nullable|image|max:5120',
+            'id_photo'         => 'nullable|image|max:5120',
         ]);
 
         $exists = User::where('company_id', $companyId)
@@ -88,19 +90,20 @@ class CompanyUserController extends Controller
         $idPhotoPath = $request->hasFile('id_photo') ? $request->file('id_photo')->store('workers', 'public') : null;
 
         $user = User::create([
-            'name'          => $validated['name'],
-            'photo'         => $photoPath,
-            'phone'         => $validated['phone'],
-            'email'         => null,
-            'address'       => $validated['address'] ?? null,
-            'password'      => Hash::make(\Illuminate\Support\Str::random(16)),
-            'pin_code'      => null,
-            'company_id'    => $companyId,
-            'role'          => $validated['role'],
-            'is_active'     => true,
-            'profession_id' => $validated['profession_id'] ?? null,
-            'category_id'   => $validated['category_id'] ?? null,
-            'id_photo_front'=> $idPhotoPath,
+            'name'             => $validated['name'],
+            'photo'            => $photoPath,
+            'phone'            => $validated['phone'],
+            'email'            => null,
+            'address'          => $validated['address'] ?? null,
+            'password'         => Hash::make(\Illuminate\Support\Str::random(16)),
+            'pin_code'         => null,
+            'company_id'       => $companyId,
+            'role'             => $validated['role'],
+            'is_active'        => true,
+            'profession_id'    => $validated['profession_id'] ?? null,
+            'category_id'      => $validated['category_id'] ?? null,
+            'taux_journalier'  => $validated['taux_journalier'] ?? 0,
+            'id_photo_front'   => $idPhotoPath,
         ]);
 
         $user->load(['profession', 'category']);
@@ -109,6 +112,16 @@ class CompanyUserController extends Controller
             'message' => 'Compte créé avec succès',
             'user'    => $this->userArray($user),
         ], 201);
+    }
+
+    public function update(Request $request, User $user)
+    {
+        abort_if($user->company_id !== $this->companyId($request), 403);
+        $validated = $request->validate([
+            'taux_journalier' => 'nullable|numeric|min:0',
+        ]);
+        $user->update(['taux_journalier' => $validated['taux_journalier'] ?? $user->taux_journalier]);
+        return response()->json(['user' => $this->userArray($user->fresh())]);
     }
 
     public function toggleActive(Request $request, User $user)

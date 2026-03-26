@@ -25,11 +25,15 @@ class AttendanceController extends Controller
 
         $today = Carbon::today();
 
+        $dailyRate = $worker->taux_journalier > 0
+            ? $worker->taux_journalier
+            : $worker->category?->daily_rate;
+
         $attendance = Attendance::firstOrCreate(
             ['worker_id' => $worker->id, 'date' => $today],
             [
                 'company_id' => $scanner->company_id,
-                'daily_rate' => $worker->category?->daily_rate,
+                'daily_rate' => $dailyRate,
             ]
         );
 
