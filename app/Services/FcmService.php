@@ -28,13 +28,17 @@ class FcmService
     /** Returns a cached OAuth2 access token valid for ~1 hour. */
     private static function accessToken(): ?string
     {
-        return Cache::remember('fcm_access_token', 3500, function () {
-            $keyPath = storage_path('firebase/service-account.json');
-            if (!file_exists($keyPath)) {
-                Log::warning('FCM: service-account.json not found at ' . $keyPath);
-                return null;
-            }
+        // Ne pas mettre en cache si déjà null (évite de bloquer FCM 58 min)
+        $cached = Cache::get('fcm_access_token');
+        if ($cached !== null) return $cached;
 
+        $keyPath = storage_path('firebase/service-account.json');
+        if (!file_exists($keyPath)) {
+            Log::warning('FCM: service-account.json not found at ' . $keyPath);
+            return null;
+        }
+
+        try {
             $sa  = json_decode(file_get_contents($keyPath), true);
             $now = time();
 
@@ -51,13 +55,25 @@ class FcmService
             openssl_sign($toSign, $signature, $sa['private_key'], OPENSSL_ALGO_SHA256);
             $jwt = "$toSign." . self::b64url($signature);
 
-            $res = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+            $res = Http::timeout(10)->asForm()->post('https://oauth2.googleapis.com/token', [
                 'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
                 'assertion'  => $jwt,
             ]);
 
-            return $res->json('access_token');
-        });
+            $token = $res->json('access_token');
+            if (!$token) {
+                Log::warning('FCM: OAuth token request failed', ['response' => $res->body()]);
+                return null;
+            }
+
+            // Mettre en cache seulement si succès
+            Cache::put('fcm_access_token', $token, 3500);
+            return $token;
+
+        } catch (\Throwable $e) {
+            Log::warning('FCM: OAuth token exception: ' . $e->getMessage());
+            return null;
+        }
     }
 
     // ── Send helpers ────────────────────────────────────────────────────────
@@ -82,7 +98,7 @@ class FcmService
                 return;
             }
 
-            Http::withHeaders([
+            $res = Http::timeout(8)->withHeaders([
                 'Authorization' => "Bearer $accessToken",
                 'Content-Type'  => 'application/json',
             ])->post(
@@ -98,7 +114,7 @@ class FcmService
                         'android' => [
                             'priority'     => 'high',
                             'notification' => [
-                                'channel_id'              => 'sb_securite_high',
+                                'channel_id'              => 'sb_securite_channel',
                                 'notification_priority'   => 'PRIORITY_HIGH',
                                 'visibility'              => 'PUBLIC',
                                 'default_sound'           => true,
@@ -113,6 +129,19 @@ class FcmService
                     ],
                 ]
             );
+
+            if (!$res->successful()) {
+                Log::warning('FCM send error', [
+                    'status'  => $res->status(),
+                    'body'    => $res->body(),
+                    'token'   => substr($token, 0, 20) . '...',
+                ]);
+                // Si token invalide/expiré, supprimer du profil utilisateur
+                if ($res->status() === 404 || str_contains($res->body(), 'UNREGISTERED')) {
+                    \App\Models\User::where('fcm_token', $token)->update(['fcm_token' => null]);
+                    Log::info('FCM: token supprimé (UNREGISTERED)', ['token' => substr($token, 0, 20)]);
+                }
+            }
         } catch (\Throwable $e) {
             Log::warning('FCM send failed: ' . $e->getMessage(), ['token' => substr($token, 0, 20)]);
         }

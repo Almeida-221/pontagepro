@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SecNotification;
 use App\Models\SecPointage;
 use App\Models\SecPointageResponse;
+use App\Jobs\SendFcmNotifications;
 use App\Models\SecTour;
 use App\Models\User;
 use App\Services\FcmService;
@@ -161,9 +162,9 @@ class SecPointageController extends Controller
             }
         }
 
-        // ── Push FCM — tous les agents concernés ─────────────────────────────
+        // ── Push FCM — tous les agents concernés (asynchrone via job) ────────
         if (!empty($fcmTokens)) {
-            FcmService::sendToTokens(
+            SendFcmNotifications::dispatch(
                 $fcmTokens,
                 "🔔 Pointage {$tourLabel} — Action requise",
                 "Confirmez votre présence dans les 15 minutes.",

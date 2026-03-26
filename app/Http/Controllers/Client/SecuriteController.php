@@ -14,6 +14,7 @@ use App\Models\SecTour;
 use App\Models\SecZone;
 use App\Models\User;
 use Illuminate\Validation\Rule;
+use App\Jobs\SendFcmNotifications;
 use App\Services\FcmService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -581,17 +582,20 @@ class SecuriteController extends Controller
             ]);
         }
 
-        // ── Push FCM notifications ────────────────────────────────────────────
+        // ── Push FCM notifications (asynchrone via job) ───────────────────────
         $fcmTokens = $agents->pluck('fcm_token')->filter()->values()->toArray();
-        FcmService::sendToTokens($fcmTokens,
-            "🔔 Pointage {$tourLabel} — Action requise",
-            "Confirmez votre présence dans les 15 minutes.",
-            [
-                'type'        => 'pointage',
-                'pointage_id' => (string) $pointage->id,
-                'tour'        => $request->tour,
-            ]
-        );
+        if (!empty($fcmTokens)) {
+            SendFcmNotifications::dispatch(
+                $fcmTokens,
+                "🔔 Pointage {$tourLabel} — Action requise",
+                "Confirmez votre présence dans les 15 minutes.",
+                [
+                    'type'        => 'pointage',
+                    'pointage_id' => (string) $pointage->id,
+                    'tour'        => $request->tour,
+                ]
+            );
+        }
 
         $notified = count($fcmTokens);
         return redirect()
