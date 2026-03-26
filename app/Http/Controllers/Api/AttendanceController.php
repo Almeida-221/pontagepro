@@ -162,10 +162,42 @@ class AttendanceController extends Controller
                 'created_at' => $p->created_at?->toIso8601String(),
             ]);
 
+        $transfersSent = \DB::table('transfers')
+            ->where('sender_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(30)
+            ->get()
+            ->map(fn($t) => [
+                'id'             => $t->id,
+                'type'           => 'transfer_sent',
+                'amount'         => (float) $t->amount,
+                'note'           => $t->note,
+                'other_party_id' => $t->recipient_id,
+                'other_name'     => \App\Models\User::find($t->recipient_id)?->name ?? '',
+                'created_at'     => $t->created_at,
+            ]);
+
+        $transfersReceived = \DB::table('transfers')
+            ->where('recipient_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(30)
+            ->get()
+            ->map(fn($t) => [
+                'id'             => $t->id,
+                'type'           => 'transfer_received',
+                'amount'         => (float) $t->amount,
+                'note'           => $t->note,
+                'other_party_id' => $t->sender_id,
+                'other_name'     => \App\Models\User::find($t->sender_id)?->name ?? '',
+                'created_at'     => $t->created_at,
+            ]);
+
         return response()->json([
-            'records'  => $attendance,
-            'payments' => $payments,
-            'balance'  => (float) ($user->fresh()->balance ?? 0),
+            'records'            => $attendance,
+            'payments'           => $payments,
+            'transfers_sent'     => $transfersSent,
+            'transfers_received' => $transfersReceived,
+            'balance'            => (float) ($user->fresh()->balance ?? 0),
         ]);
     }
 }
