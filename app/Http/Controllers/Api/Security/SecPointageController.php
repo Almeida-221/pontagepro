@@ -131,7 +131,7 @@ class SecPointageController extends Controller
 
         // ── Créer une réponse + notification par agent ───────────────────────
         $tourLabel     = ucfirst($validated['tour']);
-        $agentsToNotify = collect();
+        $fcmTokens     = [];
 
         foreach ($concerned as $agent) {
             $positionOk = $agent->affectation && $agent->affectation->isValidated;
@@ -145,37 +145,35 @@ class SecPointageController extends Controller
                 'responded_at' => $positionOk ? null : now(),
             ]);
 
-            if ($positionOk) {
-                SecNotification::create([
-                    'user_id' => $agent->id,
-                    'type'    => 'pointage',
-                    'title'   => "🔔 Pointage {$tourLabel} — Action requise",
-                    'message' => 'Confirmez votre présence dans les 15 minutes.',
-                    'data'    => ['pointage_id' => $pointage->id, 'tour' => $validated['tour']],
-                ]);
-                $agentsToNotify->push($agent);
-            } else {
-                SecNotification::create([
-                    'user_id' => $agent->id,
-                    'type'    => 'affectation',
-                    'title'   => '⚠️ Position requise',
-                    'message' => 'Veuillez envoyer votre position pour participer aux prochains pointages.',
-                    'data'    => [],
-                ]);
+            // Notifier TOUS les agents (l'app gère l'affichage selon isValidated)
+            SecNotification::notifier(
+                $agent->id,
+                'pointage',
+                "🔔 Pointage {$tourLabel} — Action requise",
+                $positionOk
+                    ? 'Confirmez votre présence dans les 15 minutes.'
+                    : 'Un pointage est en cours. Envoyez votre position pour les prochains.',
+                ['pointage_id' => $pointage->id, 'tour' => $validated['tour']]
+            );
+
+            if ($agent->fcm_token) {
+                $fcmTokens[] = $agent->fcm_token;
             }
         }
 
-        // ── Push FCM — seulement les agents avec position validée ────────────
-        $fcmTokens = $agentsToNotify->pluck('fcm_token')->filter()->values()->toArray();
-        FcmService::sendToTokens($fcmTokens,
-            "🔔 Pointage {$tourLabel} — Action requise",
-            "Confirmez votre présence dans les 15 minutes.",
-            [
-                'type'        => 'pointage',
-                'pointage_id' => (string) $pointage->id,
-                'tour'        => $validated['tour'],
-            ]
-        );
+        // ── Push FCM — tous les agents concernés ─────────────────────────────
+        if (!empty($fcmTokens)) {
+            FcmService::sendToTokens(
+                $fcmTokens,
+                "🔔 Pointage {$tourLabel} — Action requise",
+                "Confirmez votre présence dans les 15 minutes.",
+                [
+                    'type'        => 'pointage',
+                    'pointage_id' => (string) $pointage->id,
+                    'tour'        => $validated['tour'],
+                ]
+            );
+        }
 
         return response()->json([
             'pointage'     => $this->formatPointage($pointage),
