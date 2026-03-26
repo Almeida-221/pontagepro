@@ -122,7 +122,7 @@
                                 @if($s['o']->poste)<p class="text-xs text-gray-400">{{ $s['o']->poste }}</p>@endif
                             </td>
                             <td class="px-4 py-3 text-center font-medium">{{ $s['jours'] }}</td>
-                            <td class="px-4 py-3 text-right text-gray-600">{{ number_format($s['o']->taux_journalier, 0, ',', ' ') }}</td>
+                            <td class="px-4 py-3 text-right text-gray-600">{{ $s['jours'] > 0 ? number_format($s['gagne'] / $s['jours'], 0, ',', ' ') : '—' }}</td>
                             <td class="px-4 py-3 text-right font-medium text-gray-800">{{ number_format($s['gagne'], 0, ',', ' ') }}</td>
                             <td class="px-4 py-3 text-right text-green-700 font-medium">{{ number_format($s['paye'], 0, ',', ' ') }}</td>
                             <td class="px-4 py-3 text-right font-bold {{ $s['solde'] > 0 ? 'text-red-600' : 'text-green-600' }}">
