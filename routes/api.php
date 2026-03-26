@@ -43,8 +43,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payments', [\App\Http\Controllers\Api\PaymentController::class, 'store']);
 
     // Transferts entre ouvriers
-    Route::get('/transfers/lookup', [\App\Http\Controllers\Api\TransferController::class, 'lookup']);
-    Route::post('/transfers',       [\App\Http\Controllers\Api\TransferController::class, 'store']);
+    Route::get('/transfers/lookup',  [\App\Http\Controllers\Api\TransferController::class, 'lookup']);
+    Route::post('/transfers',        [\App\Http\Controllers\Api\TransferController::class, 'store']);
+    Route::post('/transfers/receive',[\App\Http\Controllers\Api\TransferController::class, 'receive']);
 
     // Notifications ouvrier/gérant
     Route::get('/notifications',                          [\App\Http\Controllers\Api\Security\SecNotificationController::class, 'index']);
