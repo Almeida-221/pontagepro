@@ -394,6 +394,30 @@ class SecuriteController extends Controller
                         );
                     }
                 }
+            } else {
+                // Seul le planning a changé (pas de nouveau poste) → notifier quand même
+                $details = [];
+                if (!empty($restDays)) $details[] = 'jours de repos';
+                if (!empty($offDays))  $details[] = 'jours de congé';
+                if (!empty($tours))    $details[] = 'tours de travail';
+                if (!empty($details)) {
+                    $detailMsg = implode(', ', $details) . ' modifié(s)';
+                    SecNotification::notifier(
+                        $agent->id,
+                        'planning_changed',
+                        '📅 Emploi du temps modifié',
+                        "Votre planning a été mis à jour : {$detailMsg}.",
+                        [],
+                    );
+                    if ($agent->fcm_token) {
+                        FcmService::sendToTokens(
+                            [$agent->fcm_token],
+                            '📅 Emploi du temps modifié',
+                            "Votre planning a été mis à jour : {$detailMsg}.",
+                            ['type' => 'planning_changed'],
+                        );
+                    }
+                }
             }
         }
 
@@ -792,13 +816,23 @@ class SecuriteController extends Controller
         ]);
 
         // Notify agent
-        SecNotification::create([
-            'user_id' => $justification->agent_id,
-            'type'    => 'justification',
-            'title'   => 'Justification validée ✅',
-            'message' => 'Votre justification d\'absence du ' . $justification->date_absence->format('d/m/Y') . ' a été validée.',
-            'data'    => json_encode(['justification_id' => $justification->id]),
-        ]);
+        $agent = \App\Models\User::find($justification->agent_id);
+        $dateStr = $justification->date_absence->format('d/m/Y');
+        SecNotification::notifier(
+            $justification->agent_id,
+            'justification',
+            'Justification validée ✅',
+            "Votre justification d'absence du {$dateStr} a été validée.",
+            ['justification_id' => $justification->id],
+        );
+        if ($agent?->fcm_token) {
+            FcmService::sendToTokens(
+                [$agent->fcm_token],
+                'Justification validée ✅',
+                "Votre justification d'absence du {$dateStr} a été validée.",
+                ['type' => 'justification', 'justification_id' => (string) $justification->id],
+            );
+        }
 
         return back()->with('success', 'Justification validée.');
     }
@@ -816,13 +850,23 @@ class SecuriteController extends Controller
         ]);
 
         // Notify agent
-        SecNotification::create([
-            'user_id' => $justification->agent_id,
-            'type'    => 'justification',
-            'title'   => 'Justification refusée ❌',
-            'message' => 'Votre justification d\'absence du ' . $justification->date_absence->format('d/m/Y') . ' a été refusée.',
-            'data'    => json_encode(['justification_id' => $justification->id]),
-        ]);
+        $agent = \App\Models\User::find($justification->agent_id);
+        $dateStr = $justification->date_absence->format('d/m/Y');
+        SecNotification::notifier(
+            $justification->agent_id,
+            'justification',
+            'Justification refusée ❌',
+            "Votre justification d'absence du {$dateStr} a été refusée.",
+            ['justification_id' => $justification->id],
+        );
+        if ($agent?->fcm_token) {
+            FcmService::sendToTokens(
+                [$agent->fcm_token],
+                'Justification refusée ❌',
+                "Votre justification d'absence du {$dateStr} a été refusée.",
+                ['type' => 'justification', 'justification_id' => (string) $justification->id],
+            );
+        }
 
         return back()->with('error', 'Justification refusée.');
     }

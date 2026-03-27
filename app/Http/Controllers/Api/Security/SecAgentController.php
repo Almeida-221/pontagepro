@@ -7,6 +7,7 @@ use App\Models\SecAffectation;
 use App\Models\SecNotification;
 use App\Models\SecPoste;
 use App\Models\User;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -205,10 +206,18 @@ class SecAgentController extends Controller
         SecNotification::notifier(
             $agent->id,
             'affectation_changed',
-            'Nouvelle affectation',
+            '📍 Nouvelle affectation',
             "Vous avez été affecté au poste : {$poste->name}.",
             ['poste_id' => $poste->id, 'poste_name' => $poste->name, 'address' => $poste->address]
         );
+        if ($agent->fcm_token) {
+            FcmService::send(
+                $agent->fcm_token,
+                '📍 Nouvelle affectation',
+                "Vous avez été affecté au poste : {$poste->name}.",
+                ['type' => 'affectation_changed', 'poste_id' => (string) $poste->id],
+            );
+        }
 
         return response()->json([
             'message'     => 'Agent affecté avec succès.',
@@ -295,6 +304,29 @@ class SecAgentController extends Controller
                 : [],
             'tours'       => $validated['tours'] ?? [],
         ]);
+
+        // Notifier l'agent du changement de planning
+        $details = [];
+        if (!empty($validated['rest_days'])) $details[] = 'jours de repos modifiés';
+        if (!empty($validated['off_days']))  $details[] = 'jours de congé modifiés';
+        if (!empty($validated['tours']))     $details[] = 'tours de travail modifiés';
+        $detailMsg = !empty($details) ? implode(', ', $details) : 'planning mis à jour';
+
+        SecNotification::notifier(
+            $agent->id,
+            'planning_changed',
+            '📅 Emploi du temps modifié',
+            "Votre planning a été mis à jour : {$detailMsg}.",
+            ['affectation_id' => $affectation->id],
+        );
+        if ($agent->fcm_token) {
+            FcmService::send(
+                $agent->fcm_token,
+                '📅 Emploi du temps modifié',
+                "Votre planning a été mis à jour : {$detailMsg}.",
+                ['type' => 'planning_changed'],
+            );
+        }
 
         return response()->json([
             'message'     => 'Planning mis à jour.',
