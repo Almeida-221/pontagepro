@@ -4,8 +4,35 @@
 
 @section('content')
 {{-- Hero Section --}}
-<section class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-20 overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<section class="relative text-white py-20 overflow-hidden" style="background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #312e81 100%);">
+
+    {{-- Background Slideshow --}}
+    <div id="hero-slideshow" class="absolute inset-0 z-0">
+        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-100">
+            <img src="{{ asset('images/hero/slide1.jpg') }}" alt="" class="w-full h-full object-cover">
+        </div>
+        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0">
+            <img src="{{ asset('images/hero/slide2.jpg') }}" alt="" class="w-full h-full object-cover">
+        </div>
+        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0">
+            <img src="{{ asset('images/hero/slide3.jpg') }}" alt="" class="w-full h-full object-cover">
+        </div>
+        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0">
+            <img src="{{ asset('images/hero/slide4.jpg') }}" alt="" class="w-full h-full object-cover">
+        </div>
+        {{-- Dark overlay so text stays readable --}}
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-blue-800/75 to-indigo-900/80"></div>
+    </div>
+
+    {{-- Slide dots --}}
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white transition-opacity" onclick="heroGoTo(0)"></button>
+        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white opacity-40 transition-opacity" onclick="heroGoTo(1)"></button>
+        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white opacity-40 transition-opacity" onclick="heroGoTo(2)"></button>
+        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white opacity-40 transition-opacity" onclick="heroGoTo(3)"></button>
+    </div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {{-- Left: text --}}
             <div>
@@ -185,6 +212,40 @@
         </div>
     </div>
 </section>
+
+@push('scripts')
+<script>
+(function() {
+    var current = 0;
+    var slides = document.querySelectorAll('.hero-slide');
+    var dots   = document.querySelectorAll('.hero-dot');
+    var total  = slides.length;
+    var timer;
+
+    function heroGoTo(n) {
+        slides[current].classList.remove('opacity-100');
+        slides[current].classList.add('opacity-0');
+        dots[current].classList.add('opacity-40');
+
+        current = (n + total) % total;
+
+        slides[current].classList.remove('opacity-0');
+        slides[current].classList.add('opacity-100');
+        dots[current].classList.remove('opacity-40');
+    }
+
+    window.heroGoTo = heroGoTo;
+
+    function next() { heroGoTo(current + 1); }
+    timer = setInterval(next, 4000);
+
+    // Pause on hover
+    var section = document.querySelector('#hero-slideshow');
+    section.addEventListener('mouseenter', function() { clearInterval(timer); });
+    section.addEventListener('mouseleave', function() { timer = setInterval(next, 4000); });
+})();
+</script>
+@endpush
 
 @push('styles')
 <style>
