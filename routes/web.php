@@ -99,6 +99,7 @@ Route::prefix('espace-client')->name('client.')->middleware(['auth', 'client'])-
         Route::post('/justifications/{justification}/rejeter',            [SecuriteController::class, 'rejeterJustification'])->name('justifications.rejeter');
         // Remplacements
         Route::get('/remplacements',                                      [SecuriteController::class, 'remplacements'])->name('remplacements');
+        Route::delete('/remplacements/{remplacement}',                    [SecuriteController::class, 'destroyRemplacement'])->name('remplacements.destroy');
     });
 
     // ── Pointage Ouvriers ────────────────────────────────────────────────────

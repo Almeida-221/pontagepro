@@ -413,7 +413,8 @@ class SecPresenceController extends Controller
 
     public function activitesRecentes(Request $request)
     {
-        $user = $request->user();
+        $user  = $request->user();
+        $limit = (int) ($request->query('limit', 50));
         $activities = [];
 
         if ($user->role === 'agent_securite') {
@@ -422,7 +423,7 @@ class SecPresenceController extends Controller
                 ->with('pointage:id,tour,type,date')
                 ->whereNotNull('responded_at')
                 ->orderByDesc('responded_at')
-                ->limit(15)
+                ->limit(20)
                 ->get();
             foreach ($responses as $r) {
                 $activities[] = [
@@ -432,7 +433,7 @@ class SecPresenceController extends Controller
                     'date'   => $r->responded_at?->toIso8601String(),
                 ];
             }
-            // Planning loads
+            // Planning / affectations
             $affs = \App\Models\SecAffectation::where('agent_id', $user->id)
                 ->with('poste:id,name')->orderByDesc('started_at')->limit(5)->get();
             foreach ($affs as $aff) {
@@ -441,6 +442,29 @@ class SecPresenceController extends Controller
                     'label'  => 'Planning chargé',
                     'detail' => 'Affecté au poste : ' . ($aff->poste?->name ?? 'Inconnu'),
                     'date'   => $aff->started_at?->toIso8601String(),
+                ];
+            }
+            // Remplacements (agent sortant ou entrant)
+            $remplacements = \App\Models\SecRemplacement::where(fn($q) =>
+                    $q->where('agent_sortant_id', $user->id)
+                      ->orWhere('agent_entrant_id', $user->id)
+                )
+                ->where('company_id', $user->company_id)
+                ->with(['agentSortant:id,name', 'agentEntrant:id,name', 'poste:id,name'])
+                ->orderByDesc('created_at')
+                ->limit(20)
+                ->get();
+            foreach ($remplacements as $r) {
+                $estSortant = $r->agent_sortant_id === $user->id;
+                $autreAgent = $estSortant ? $r->agentEntrant?->name : $r->agentSortant?->name;
+                $heure      = \Carbon\Carbon::parse($r->heure_entree)->format('H\hi');
+                $activities[] = [
+                    'type'   => 'remplacement',
+                    'label'  => $estSortant
+                        ? "{$autreAgent} vous a remplacé"
+                        : "Vous avez remplacé {$autreAgent}",
+                    'detail' => ($r->poste?->name ?? '') . ' — ' . ($estSortant ? 'Sortie' : 'Entrée') . " à $heure",
+                    'date'   => $r->created_at?->toIso8601String(),
                 ];
             }
         } else {
@@ -455,7 +479,7 @@ class SecPresenceController extends Controller
                     'date'   => $s->created_at?->toIso8601String(),
                 ];
             }
-            // Scans individuels (pointage local — un enregistrement par agent scanné)
+            // Scans locaux
             $scanResponses = \App\Models\SecPointageResponse::whereHas('pointage', fn($q) =>
                     $q->where('initiated_by', $user->id)->where('type', 'local')
                 )
@@ -483,11 +507,30 @@ class SecPresenceController extends Controller
                     'date'   => $r->created_at?->toIso8601String(),
                 ];
             }
+            // Remplacements confirmés par ce gérant
+            $remplacements = \App\Models\SecRemplacement::where('agent_entrant_id', $user->id)
+                ->where('company_id', $user->company_id)
+                ->with(['agentSortant:id,name', 'poste:id,name'])
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get();
+            foreach ($remplacements as $r) {
+                $heure = \Carbon\Carbon::parse($r->heure_entree)->format('H\hi');
+                $activities[] = [
+                    'type'   => 'remplacement',
+                    'label'  => "Vous avez remplacé " . ($r->agentSortant?->name ?? ''),
+                    'detail' => ($r->poste?->name ?? '') . " — Entrée à $heure",
+                    'date'   => $r->created_at?->toIso8601String(),
+                ];
+            }
         }
 
         usort($activities, fn($a, $b) => strcmp($b['date'] ?? '', $a['date'] ?? ''));
 
-        return response()->json(['activities' => array_slice($activities, 0, 20)]);
+        return response()->json([
+            'activities' => array_slice($activities, 0, $limit),
+            'total'      => count($activities),
+        ]);
     }
 
     // ─── Stats pointages (compteur mensuel + historique annuel) ────────────

@@ -155,9 +155,10 @@ Route::prefix('securite')->name('securite.')->group(function () {
         Route::delete('/justifications/{justification}', [SecJustificationController::class, 'destroy']);
 
         // Remplacements
-        Route::post('/remplacements/scan',              [SecRemplacementController::class, 'scan']);
-        Route::post('/remplacements/confirmer',         [SecRemplacementController::class, 'confirmer']);
-        Route::get('/remplacements',                    [SecRemplacementController::class, 'index']);
-        Route::get('/remplacements/{remplacement}',     [SecRemplacementController::class, 'show']);
+        Route::post('/remplacements/scan',                  [SecRemplacementController::class, 'scan']);
+        Route::post('/remplacements/confirmer',             [SecRemplacementController::class, 'confirmer']);
+        Route::get('/remplacements',                        [SecRemplacementController::class, 'index']);
+        Route::get('/remplacements/{remplacement}',         [SecRemplacementController::class, 'show']);
+        Route::delete('/remplacements/{remplacement}',      [SecRemplacementController::class, 'destroy']);
     });
 });

@@ -246,6 +246,26 @@ class SecRemplacementController extends Controller
         ]);
     }
 
+    // ── Supprimer ─────────────────────────────────────────────────────────────
+    // DELETE /securite/remplacements/{id}
+    public function destroy(Request $request, SecRemplacement $remplacement)
+    {
+        $user = $request->user();
+
+        if ($remplacement->company_id !== $user->company_id) {
+            return response()->json(['message' => 'Accès non autorisé.'], 403);
+        }
+
+        // Seuls gérant et admin peuvent supprimer
+        if ($user->role === 'agent_securite') {
+            return response()->json(['message' => 'Action non autorisée.'], 403);
+        }
+
+        $remplacement->delete();
+
+        return response()->json(['message' => 'Remplacement supprimé.']);
+    }
+
     // ── Détail ────────────────────────────────────────────────────────────────
     // GET /securite/remplacements/{id}
     public function show(Request $request, SecRemplacement $remplacement)

@@ -918,4 +918,12 @@ class SecuriteController extends Controller
             'today', 'week', 'month'
         ));
     }
+
+    public function destroyRemplacement(SecRemplacement $remplacement)
+    {
+        $company = $this->company();
+        abort_if($remplacement->company_id !== $company->id, 403);
+        $remplacement->delete();
+        return back()->with('success', 'Remplacement supprimé.');
+    }
 }
