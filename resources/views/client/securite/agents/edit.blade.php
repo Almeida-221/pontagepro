@@ -21,7 +21,11 @@
     $postesJson = $postes->map(fn($p)=>['id'=>$p->id,'name'=>$p->name,'zone_id'=>$p->zone_id])->values()->toJson();
 @endphp
 
-<div class="max-w-3xl space-y-6 mt-2">
+<div class="mt-2">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+{{-- ── Colonne gauche : formulaire (2/3) ──────────────────────────────── --}}
+<div class="lg:col-span-2 space-y-6">
 <form method="POST" action="{{ route('client.securite.agents.update', $agent) }}"
     enctype="multipart/form-data"
     x-data="{
@@ -305,5 +309,113 @@
     </div>
 
 </form>
-</div>
+</div>{{-- fin col gauche --}}
+
+{{-- ── Colonne droite : historique (1/3) ──────────────────────────────── --}}
+<div class="lg:col-span-1 space-y-4">
+
+    {{-- Stats rapides --}}
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Statistiques
+        </h3>
+        <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="bg-blue-50 rounded-lg p-3">
+                <p class="text-xl font-bold text-blue-700">{{ $historique->count() }}</p>
+                <p class="text-xs text-blue-600 mt-0.5">Affectations</p>
+            </div>
+            <div class="bg-orange-50 rounded-lg p-3">
+                <p class="text-xl font-bold text-orange-700">{{ $remplacementsCount['sortant'] }}</p>
+                <p class="text-xs text-orange-600 mt-0.5">Remplacé</p>
+            </div>
+            <div class="bg-green-50 rounded-lg p-3">
+                <p class="text-xl font-bold text-green-700">{{ $remplacementsCount['entrant'] }}</p>
+                <p class="text-xs text-green-600 mt-0.5">Remplaçant</p>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a href="{{ route('client.securite.agents.planning', $agent) }}"
+                class="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium px-4 py-2 rounded-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Voir tout le planning
+            </a>
+        </div>
+    </div>
+
+    {{-- Historique affectations --}}
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Historique des postes
+        </h3>
+        @if($historique->isEmpty())
+            <p class="text-xs text-gray-400 text-center py-4">Aucune affectation enregistrée.</p>
+        @else
+        <div class="space-y-2">
+            @foreach($historique as $aff)
+            <div class="flex items-start gap-3 py-2 {{ !$loop->last ? 'border-b border-gray-50' : '' }}">
+                <div class="mt-0.5 flex-shrink-0">
+                    @if($aff->is_active)
+                        <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                    @else
+                        <span class="w-2 h-2 rounded-full bg-gray-300 inline-block"></span>
+                    @endif
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-800 truncate">
+                        {{ $aff->poste?->name ?? '—' }}
+                    </p>
+                    <p class="text-xs text-gray-400">{{ $aff->poste?->zone?->name ?? '' }}</p>
+                    <p class="text-xs text-gray-400">
+                        {{ $aff->started_at ? $aff->started_at->format('d/m/Y') : '—' }}
+                        @if(!$aff->is_active && $aff->ended_at)
+                            → {{ $aff->ended_at->format('d/m/Y') }}
+                        @elseif($aff->is_active)
+                            → <span class="text-green-600 font-medium">En cours</span>
+                        @endif
+                    </p>
+                </div>
+                @if($aff->is_active)
+                <span class="text-xs bg-green-100 text-green-700 rounded-full px-2 py-0.5 flex-shrink-0">Actif</span>
+                @endif
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </div>
+
+    {{-- Tours actuels --}}
+    @php $affActive = $historique->firstWhere('is_active', true); @endphp
+    @if($affActive && !empty($affActive->tours))
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Tours actuels
+        </h3>
+        <div class="space-y-2">
+            @foreach($affActive->tours as $tour)
+            <div class="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                <span class="font-medium text-gray-700">{{ $tour['type'] ?? '—' }}</span>
+                <span class="text-gray-500 font-mono text-xs">
+                    {{ $tour['start'] ?? '' }} – {{ $tour['end'] ?? '' }}
+                </span>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+</div>{{-- fin col droite --}}
+</div>{{-- fin grid --}}
+</div>{{-- fin wrapper --}}
 @endsection

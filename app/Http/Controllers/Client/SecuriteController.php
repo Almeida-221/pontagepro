@@ -310,7 +310,40 @@ class SecuriteController extends Controller
         $zones  = SecZone::where('company_id', $company->id)->get();
         $postes = SecPoste::where('company_id', $company->id)->with('zone')->get();
         $tours  = SecTour::where('company_id', $company->id)->orderBy('ordre')->get();
-        return view('client.securite.agents.edit', compact('company', 'agent', 'zones', 'postes', 'tours'));
+
+        // Historique des affectations (toutes, archivées + active)
+        $historique = SecAffectation::where('agent_id', $agent->id)
+            ->with(['poste', 'poste.zone'])
+            ->orderByDesc('started_at')
+            ->get();
+
+        // Compteurs remplacements
+        $remplacementsCount = [
+            'sortant' => SecRemplacement::where('agent_sortant_id', $agent->id)->count(),
+            'entrant' => SecRemplacement::where('agent_entrant_id', $agent->id)->count(),
+        ];
+
+        return view('client.securite.agents.edit', compact('company', 'agent', 'zones', 'postes', 'tours', 'historique', 'remplacementsCount'));
+    }
+
+    public function agentPlanning(User $agent)
+    {
+        $company = $this->company();
+        abort_if($agent->company_id !== $company->id, 403);
+
+        $affectations = SecAffectation::where('agent_id', $agent->id)
+            ->with(['poste', 'poste.zone'])
+            ->orderByDesc('started_at')
+            ->get();
+
+        $remplacements = SecRemplacement::where('company_id', $company->id)
+            ->where(fn($q) => $q->where('agent_sortant_id', $agent->id)
+                                ->orWhere('agent_entrant_id', $agent->id))
+            ->with(['poste', 'zone', 'agentSortant', 'agentEntrant'])
+            ->orderByDesc('date')
+            ->get();
+
+        return view('client.securite.agents.planning', compact('agent', 'affectations', 'remplacements'));
     }
 
     public function updateAgent(Request $request, User $agent)

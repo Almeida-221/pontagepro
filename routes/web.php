@@ -83,6 +83,7 @@ Route::prefix('espace-client')->name('client.')->middleware(['auth', 'client'])-
         Route::get('/membres/creer',                      [SecuriteController::class, 'createAgent'])->name('agents.create');
         Route::post('/membres',                           [SecuriteController::class, 'storeAgent'])->name('agents.store');
         Route::get('/membres/{agent}/modifier',           [SecuriteController::class, 'editAgent'])->name('agents.edit');
+        Route::get('/membres/{agent}/planning',           [SecuriteController::class, 'agentPlanning'])->name('agents.planning');
         Route::put('/membres/{agent}',                    [SecuriteController::class, 'updateAgent'])->name('agents.update');
         Route::post('/membres/{agent}/toggle',            [SecuriteController::class, 'toggleAgent'])->name('agents.toggle');
         Route::post('/membres/{agent}/reset-pin',         [SecuriteController::class, 'resetPin'])->name('agents.reset-pin');
