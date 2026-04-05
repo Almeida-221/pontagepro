@@ -109,26 +109,37 @@
                 </div>
             </div>
 
-            {{-- Orange Money / Wave details --}}
-            <div x-show="paymentMethod === 'orange_money' || paymentMethod === 'wave'" x-cloak class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p class="text-sm text-yellow-800 font-medium mb-1">Instructions de paiement mobile</p>
-                <p class="text-xs text-yellow-700">Apres soumission, vous recevrez un message de confirmation sur votre telephone pour valider le paiement.</p>
+            {{-- Orange Money details --}}
+            <div x-show="paymentMethod === 'orange_money'" x-cloak class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <p class="text-sm text-orange-800 font-medium mb-1">Paiement Orange Money</p>
+                <p class="text-xs text-orange-700">Apres soumission, vous recevrez un message de confirmation sur votre telephone pour valider le paiement.</p>
             </div>
 
-            {{-- Visa / Bank card details --}}
-            <div x-show="paymentMethod === 'visa' || paymentMethod === 'bank'" x-cloak class="space-y-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Numero de carte</label>
-                    <input type="text" placeholder="1234 5678 9012 3456" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date d'expiration</label>
-                        <input type="text" placeholder="MM/AA" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {{-- Wave details --}}
+            <div x-show="paymentMethod === 'wave'" x-cloak class="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                <p class="text-sm text-blue-800 font-medium">Paiement Wave</p>
+                <p class="text-xs text-blue-700">Cliquez sur le bouton ci-dessous pour effectuer votre paiement via Wave. Une fois le paiement completé, revenez sur cette page et cliquez sur <strong>Payer</strong> pour confirmer votre inscription.</p>
+                <a href="https://pay.wave.com/m/M_sn_r_Twbm3KB38h/c/sn/" target="_blank" rel="noopener"
+                    class="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Ouvrir Wave pour payer
+                </a>
+            </div>
+
+            {{-- Visa / Bank transfer details --}}
+            <div x-show="paymentMethod === 'visa' || paymentMethod === 'bank'" x-cloak class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                <p class="text-sm text-gray-800 font-medium">Virement bancaire</p>
+                <p class="text-xs text-gray-600">Effectuez un virement vers le compte ci-dessous avec comme reference votre nom et le plan choisi, puis cliquez sur <strong>Payer</strong> pour confirmer votre inscription.</p>
+                <div class="bg-white border border-gray-300 rounded-lg p-3 space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Titulaire</span>
+                        <span class="font-semibold text-gray-800">SB Pointage</span>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                        <input type="text" placeholder="123" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Numero de compte</span>
+                        <span class="font-semibold text-gray-800 font-mono tracking-wider">4950 6663 6910 5432</span>
                     </div>
                 </div>
             </div>
