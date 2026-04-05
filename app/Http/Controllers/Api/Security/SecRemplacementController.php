@@ -52,11 +52,38 @@ class SecRemplacementController extends Controller
         }
 
         // Récupérer l'affectation active de l'agent sortant
-        $affectation = SecAffectation::where('agent_id', $agentSortant->id)
+        $affectationSortant = SecAffectation::where('agent_id', $agentSortant->id)
             ->where('is_active', true)
             ->with(['poste', 'poste.zone'])
             ->latest()
             ->first();
+
+        // Récupérer l'affectation active de l'agent entrant (celui qui scanne)
+        $affectationEntrant = SecAffectation::where('agent_id', $agentEntrant->id)
+            ->where('is_active', true)
+            ->latest()
+            ->first();
+
+        // ── Règle métier : même poste obligatoire ────────────────────────────
+        $posteSortant = $affectationSortant?->poste_id;
+        $posteEntrant = $affectationEntrant?->poste_id;
+
+        if (!$posteSortant || !$posteEntrant) {
+            return response()->json([
+                'message' => 'Remplacement impossible : un des agents n\'est pas affecté à un poste actif.',
+            ], 422);
+        }
+
+        if ($posteSortant !== $posteEntrant) {
+            return response()->json([
+                'message' => 'Remplacement refusé : vous n\'êtes pas affecté au même poste que ' . $agentSortant->name . '.',
+                'poste_sortant' => $affectationSortant->poste?->name,
+                'poste_entrant' => $affectationEntrant?->poste?->name,
+            ], 422);
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        $affectation = $affectationSortant;
 
         return response()->json([
             'agent_sortant' => [
@@ -105,6 +132,25 @@ class SecRemplacementController extends Controller
             ->where('is_active', true)
             ->latest()
             ->first();
+
+        // ── Double sécurité : même poste ─────────────────────────────────────
+        $affectationEntrant = SecAffectation::where('agent_id', $agentEntrant->id)
+            ->where('is_active', true)
+            ->latest()
+            ->first();
+
+        if (!$affectation?->poste_id || !$affectationEntrant?->poste_id) {
+            return response()->json([
+                'message' => 'Remplacement impossible : un des agents n\'est pas affecté à un poste actif.',
+            ], 422);
+        }
+
+        if ($affectation->poste_id !== $affectationEntrant->poste_id) {
+            return response()->json([
+                'message' => 'Remplacement refusé : les deux agents doivent être affectés au même poste.',
+            ], 422);
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         $posteId = $affectation?->poste_id;
         $zoneId  = $affectation
