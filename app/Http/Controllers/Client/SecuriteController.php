@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\HasActiveCompany;
 use App\Models\SecAffectation;
+use App\Models\SecCommunication;
 use App\Models\SecJustification;
 use App\Models\SecNotification;
 use App\Models\SecPointage;
@@ -958,5 +959,56 @@ class SecuriteController extends Controller
         abort_if($remplacement->company_id !== $company->id, 403);
         $remplacement->delete();
         return back()->with('success', 'Remplacement supprimé.');
+    }
+
+    // ── Communications ────────────────────────────────────────────────────────
+    public function communications()
+    {
+        $company = $this->company();
+        $communications = SecCommunication::where('company_id', $company->id)
+            ->with('creator:id,name')
+            ->orderByDesc('created_at')
+            ->get();
+        return view('client.securite.communications.index', compact('communications'));
+    }
+
+    public function storeCommunication(Request $request)
+    {
+        $company = $this->company();
+        $v = $request->validate([
+            'title'      => 'required|string|max:200',
+            'message'    => 'nullable|string|max:1000',
+            'audio'      => 'nullable|file|mimes:mp3,wav,ogg,m4a,aac|max:20480',
+            'expires_at' => 'nullable|date|after:now',
+        ]);
+
+        $audioPath = null;
+        if ($request->hasFile('audio')) {
+            $audioPath = $request->file('audio')->store('communications', 'public');
+        }
+
+        SecCommunication::create([
+            'company_id' => $company->id,
+            'title'      => $v['title'],
+            'message'    => $v['message'] ?? null,
+            'audio_path' => $audioPath,
+            'created_by' => auth()->id(),
+            'expires_at' => $v['expires_at'] ?? null,
+        ]);
+
+        return back()->with('success', 'Communication envoyée à tous les agents.');
+    }
+
+    public function destroyCommunication(SecCommunication $communication)
+    {
+        $company = $this->company();
+        abort_if($communication->company_id !== $company->id, 403);
+
+        if ($communication->audio_path) {
+            \Storage::disk('public')->delete($communication->audio_path);
+        }
+
+        $communication->delete();
+        return back()->with('success', 'Communication supprimée.');
     }
 }

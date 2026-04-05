@@ -101,6 +101,10 @@ Route::prefix('espace-client')->name('client.')->middleware(['auth', 'client'])-
         // Remplacements
         Route::get('/remplacements',                                      [SecuriteController::class, 'remplacements'])->name('remplacements');
         Route::delete('/remplacements/{remplacement}',                    [SecuriteController::class, 'destroyRemplacement'])->name('remplacements.destroy');
+        // Communications
+        Route::get('/communications',                                     [SecuriteController::class, 'communications'])->name('communications');
+        Route::post('/communications',                                    [SecuriteController::class, 'storeCommunication'])->name('communications.store');
+        Route::delete('/communications/{communication}',                  [SecuriteController::class, 'destroyCommunication'])->name('communications.destroy');
     });
 
     // ── Pointage Ouvriers ────────────────────────────────────────────────────
