@@ -14,12 +14,18 @@ class SecCommunication extends Model
         'title',
         'message',
         'audio_path',
+        'poste_ids',
+        'zone_ids',
+        'tour_ids',
         'created_by',
         'expires_at',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'poste_ids'  => 'array',
+        'zone_ids'   => 'array',
+        'tour_ids'   => 'array',
     ];
 
     public function company(): BelongsTo

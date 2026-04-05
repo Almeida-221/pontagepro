@@ -15,14 +15,63 @@
 
         {{-- ── Formulaire envoi ────────────────────────────────── --}}
         <div class="lg:col-span-1">
-            <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-5"
+                x-data="{
+                    recording: false,
+                    recorded: false,
+                    seconds: 0,
+                    timer: null,
+                    mediaRec: null,
+                    audioBlob: null,
+                    audioUrl: null,
+                    async startRec() {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            const chunks = [];
+                            this.mediaRec = new MediaRecorder(stream);
+                            this.mediaRec.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+                            this.mediaRec.onstop = () => {
+                                stream.getTracks().forEach(t => t.stop());
+                                this.audioBlob = new Blob(chunks, { type: 'audio/webm' });
+                                this.audioUrl = URL.createObjectURL(this.audioBlob);
+                                const file = new File([this.audioBlob], 'vocal.webm', { type: 'audio/webm' });
+                                const dt = new DataTransfer();
+                                dt.items.add(file);
+                                document.getElementById('audio-input').files = dt.files;
+                                this.recorded = true;
+                            };
+                            this.mediaRec.start(200);
+                            this.recording = true;
+                            this.seconds = 0;
+                            this.timer = setInterval(() => this.seconds++, 1000);
+                        } catch(err) {
+                            alert('Microphone non disponible : ' + err.message);
+                        }
+                    },
+                    stopRec() {
+                        if(this.mediaRec) this.mediaRec.stop();
+                        clearInterval(this.timer);
+                        this.recording = false;
+                    },
+                    deleteRec() {
+                        this.recorded = false;
+                        this.audioBlob = null;
+                        this.audioUrl = null;
+                        document.getElementById('audio-input').value = '';
+                    },
+                    fmtTime(s) {
+                        const m = String(Math.floor(s/60)).padStart(2,'0');
+                        const sec = String(s%60).padStart(2,'0');
+                        return m+':'+sec;
+                    }
+                }">
+
                 <h3 class="font-semibold text-gray-900 flex items-center gap-2">
                     <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                     </svg>
                     Nouvelle communication
                 </h3>
-                <p class="text-xs text-gray-500">Cette communication sera visible par tous les agents de l'entreprise dans leur application mobile.</p>
 
                 @if($errors->any())
                 <div class="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -36,6 +85,7 @@
                     enctype="multipart/form-data" class="space-y-4">
                     @csrf
 
+                    {{-- Titre --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Titre <span class="text-red-500">*</span></label>
                         <input type="text" name="title" required value="{{ old('title') }}"
@@ -43,32 +93,127 @@
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-purple-300 outline-none">
                     </div>
 
+                    {{-- Message optionnel --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Message (optionnel)</label>
-                        <textarea name="message" rows="3"
+                        <textarea name="message" rows="2"
                             placeholder="Description complémentaire..."
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-purple-300 outline-none resize-none">{{ old('message') }}</textarea>
                     </div>
 
+                    {{-- Enregistrement vocal ──────────────────────────────── --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            <span class="flex items-center gap-1">
-                                <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z"/>
+                            </svg>
+                            Message vocal
+                        </label>
+                        <input type="file" id="audio-input" name="audio" accept="audio/*" class="hidden">
+
+                        {{-- Pas encore enregistré --}}
+                        <div x-show="!recording && !recorded" class="flex items-center gap-3">
+                            <button type="button" @click="startRec()"
+                                class="flex items-center gap-2 bg-purple-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-purple-700 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z"/>
                                 </svg>
-                                Message vocal (optionnel)
-                            </span>
-                        </label>
-                        <input type="file" name="audio" accept="audio/*"
-                            class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
-                        <p class="text-xs text-gray-400 mt-1">MP3, WAV, OGG, M4A — max 20 Mo</p>
+                                Appuyer pour enregistrer
+                            </button>
+                        </div>
+
+                        {{-- En cours d'enregistrement --}}
+                        <div x-show="recording" x-cloak class="flex items-center gap-3">
+                            <div class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 flex-1">
+                                <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse flex-shrink-0"></span>
+                                <span class="text-sm font-semibold text-red-700">Enregistrement</span>
+                                <span x-text="fmtTime(seconds)" class="text-sm font-mono text-red-600 ml-auto"></span>
+                            </div>
+                            <button type="button" @click="stopRec()"
+                                class="flex items-center gap-2 bg-red-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-red-700 transition">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <rect x="6" y="6" width="12" height="12" rx="2"/>
+                                </svg>
+                                Arrêter
+                            </button>
+                        </div>
+
+                        {{-- Enregistrement terminé --}}
+                        <div x-show="recorded" x-cloak class="space-y-2">
+                            <div class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                                <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <span class="text-sm text-green-700 font-medium flex-1">Message enregistré (<span x-text="fmtTime(seconds)"></span>)</span>
+                                <button type="button" @click="deleteRec()" class="text-red-400 hover:text-red-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <audio :src="audioUrl" controls class="w-full h-8" x-show="audioUrl"></audio>
+                        </div>
                     </div>
 
+                    {{-- Ciblage ──────────────────────────────────────────────── --}}
+                    <div class="border-t border-gray-100 pt-4 space-y-3">
+                        <p class="text-sm font-semibold text-gray-700">Destinataires</p>
+                        <p class="text-xs text-gray-400">Laisser vide = envoyer à tous les agents</p>
+
+                        {{-- Zones --}}
+                        @if($zones->isNotEmpty())
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">Zones</label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($zones as $z)
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" name="zone_ids[]" value="{{ $z->id }}"
+                                        class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
+                                    <span class="text-xs text-gray-700">{{ $z->name }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Postes --}}
+                        @if($postes->isNotEmpty())
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">Postes</label>
+                            <div class="flex flex-wrap gap-2 max-h-28 overflow-y-auto pr-1">
+                                @foreach($postes as $p)
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" name="poste_ids[]" value="{{ $p->id }}"
+                                        class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
+                                    <span class="text-xs text-gray-700">{{ $p->name }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Tours --}}
+                        @if($tours->isNotEmpty())
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">Tours</label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($tours as $t)
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" name="tour_ids[]" value="{{ $t->nom }}"
+                                        class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
+                                    <span class="text-xs text-gray-700">{{ $t->emoji }} {{ $t->nom }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+
+                    {{-- Expiration --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Expiration (optionnel)</label>
                         <input type="datetime-local" name="expires_at" value="{{ old('expires_at') }}"
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-purple-300 outline-none">
-                        <p class="text-xs text-gray-400 mt-1">Laisser vide = visible indéfiniment</p>
                     </div>
 
                     <button type="submit"
@@ -96,7 +241,6 @@
                 <div class="py-16 text-center">
                     <div class="text-4xl mb-3">📢</div>
                     <p class="text-gray-400 text-sm">Aucune communication envoyée.</p>
-                    <p class="text-gray-400 text-xs mt-1">Utilisez le formulaire pour envoyer votre première annonce.</p>
                 </div>
                 @else
                 <div class="divide-y divide-gray-100">
@@ -117,7 +261,7 @@
                                     @endif
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 flex-wrap">
+                                    <div class="flex items-center gap-2 flex-wrap mb-1">
                                         <p class="font-semibold text-gray-900">{{ $c->title }}</p>
                                         @if($expired)
                                         <span class="text-xs bg-gray-100 text-gray-500 rounded-full px-2 py-0.5">Expirée</span>
@@ -126,10 +270,30 @@
                                         @endif
                                     </div>
                                     @if($c->message)
-                                    <p class="text-sm text-gray-500 mt-0.5 line-clamp-2">{{ $c->message }}</p>
+                                    <p class="text-sm text-gray-500 mb-1">{{ $c->message }}</p>
                                     @endif
+                                    {{-- Ciblage --}}
+                                    <div class="flex flex-wrap gap-1 mb-1">
+                                        @if(!empty($c->zone_ids))
+                                            @foreach($zones->whereIn('id', $c->zone_ids) as $z)
+                                            <span class="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5">{{ $z->name }}</span>
+                                            @endforeach
+                                        @else
+                                            <span class="text-xs bg-gray-100 text-gray-500 rounded px-1.5 py-0.5">Toutes zones</span>
+                                        @endif
+                                        @if(!empty($c->poste_ids))
+                                            @foreach($postes->whereIn('id', $c->poste_ids) as $p)
+                                            <span class="text-xs bg-indigo-50 text-indigo-700 rounded px-1.5 py-0.5">{{ $p->name }}</span>
+                                            @endforeach
+                                        @endif
+                                        @if(!empty($c->tour_ids))
+                                            @foreach($c->tour_ids as $t)
+                                            <span class="text-xs bg-orange-50 text-orange-700 rounded px-1.5 py-0.5">{{ $t }}</span>
+                                            @endforeach
+                                        @endif
+                                    </div>
                                     @if($c->audio_path)
-                                    <audio controls class="mt-2 h-8 w-full max-w-xs">
+                                    <audio controls class="h-8 w-full max-w-xs">
                                         <source src="{{ asset('storage/'.$c->audio_path) }}">
                                     </audio>
                                     @endif
@@ -142,7 +306,7 @@
                                 </div>
                             </div>
                             <form method="POST" action="{{ route('client.securite.communications.destroy', $c) }}"
-                                onsubmit="return confirm('Supprimer cette communication ?')">
+                                onsubmit="return confirm('Supprimer cette communication de tous les téléphones ?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-400 hover:text-red-600 transition flex-shrink-0" title="Supprimer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

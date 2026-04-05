@@ -969,7 +969,12 @@ class SecuriteController extends Controller
             ->with('creator:id,name')
             ->orderByDesc('created_at')
             ->get();
-        return view('client.securite.communications.index', compact('communications'));
+        $zones  = SecZone::where('company_id', $company->id)->get();
+        $postes = SecPoste::where('company_id', $company->id)->with('zone')->get();
+        $tours  = SecTour::where('company_id', $company->id)->orderBy('ordre')->get();
+        return view('client.securite.communications.index', compact(
+            'communications', 'zones', 'postes', 'tours'
+        ));
     }
 
     public function storeCommunication(Request $request)
@@ -978,8 +983,14 @@ class SecuriteController extends Controller
         $v = $request->validate([
             'title'      => 'required|string|max:200',
             'message'    => 'nullable|string|max:1000',
-            'audio'      => 'nullable|file|mimes:mp3,wav,ogg,m4a,aac|max:20480',
+            'audio'      => 'nullable|file|mimes:mp3,wav,ogg,m4a,aac,webm|max:20480',
             'expires_at' => 'nullable|date|after:now',
+            'poste_ids'  => 'nullable|array',
+            'poste_ids.*'=> 'integer|exists:sec_postes,id',
+            'zone_ids'   => 'nullable|array',
+            'zone_ids.*' => 'integer|exists:sec_zones,id',
+            'tour_ids'   => 'nullable|array',
+            'tour_ids.*' => 'string',
         ]);
 
         $audioPath = null;
@@ -992,11 +1003,14 @@ class SecuriteController extends Controller
             'title'      => $v['title'],
             'message'    => $v['message'] ?? null,
             'audio_path' => $audioPath,
+            'poste_ids'  => !empty($v['poste_ids']) ? $v['poste_ids'] : null,
+            'zone_ids'   => !empty($v['zone_ids'])  ? $v['zone_ids']  : null,
+            'tour_ids'   => !empty($v['tour_ids'])  ? $v['tour_ids']  : null,
             'created_by' => auth()->id(),
             'expires_at' => $v['expires_at'] ?? null,
         ]);
 
-        return back()->with('success', 'Communication envoyée à tous les agents.');
+        return back()->with('success', 'Communication envoyée aux agents ciblés.');
     }
 
     public function destroyCommunication(SecCommunication $communication)
@@ -1008,7 +1022,23 @@ class SecuriteController extends Controller
             \Storage::disk('public')->delete($communication->audio_path);
         }
 
+        $commId = $communication->id;
         $communication->delete();
-        return back()->with('success', 'Communication supprimée.');
+
+        // Notifier tous les agents via FCM (message silencieux)
+        $tokens = User::where('company_id', $company->id)
+            ->whereIn('role', ['agent_securite', 'gerant_securite'])
+            ->whereNotNull('fcm_token')
+            ->pluck('fcm_token')
+            ->toArray();
+
+        if (!empty($tokens)) {
+            SendFcmNotifications::dispatch($tokens, '', '', [
+                'type'             => 'communication_deleted',
+                'communication_id' => (string) $commId,
+            ]);
+        }
+
+        return back()->with('success', 'Communication supprimée et retirée des téléphones.');
     }
 }

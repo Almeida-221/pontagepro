@@ -98,36 +98,38 @@ class FcmService
                 return;
             }
 
+            // Data-only (silent) push si titre vide — ex: communication_deleted
+            $dataOnly = empty($title);
+            $message = [
+                'token' => $token,
+                'data'  => array_map('strval', $data),
+            ];
+            if (!$dataOnly) {
+                $message['notification'] = ['title' => $title, 'body' => $body];
+                $message['android'] = [
+                    'priority'     => 'high',
+                    'notification' => [
+                        'channel_id'              => 'sb_securite_channel',
+                        'notification_priority'   => 'PRIORITY_HIGH',
+                        'visibility'              => 'PUBLIC',
+                        'default_sound'           => true,
+                        'default_vibrate_timings' => true,
+                        'default_light_settings'  => true,
+                    ],
+                ];
+                $message['apns'] = [
+                    'headers' => ['apns-priority' => '10'],
+                    'payload' => ['aps' => ['sound' => 'default', 'badge' => 1]],
+                ];
+            } else {
+                $message['android'] = ['priority' => 'high'];
+            }
             $res = Http::timeout(8)->withHeaders([
                 'Authorization' => "Bearer $accessToken",
                 'Content-Type'  => 'application/json',
             ])->post(
                 "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send",
-                [
-                    'message' => [
-                        'token'        => $token,
-                        'notification' => [
-                            'title' => $title,
-                            'body'  => $body,
-                        ],
-                        'data' => array_map('strval', $data),
-                        'android' => [
-                            'priority'     => 'high',
-                            'notification' => [
-                                'channel_id'              => 'sb_securite_channel',
-                                'notification_priority'   => 'PRIORITY_HIGH',
-                                'visibility'              => 'PUBLIC',
-                                'default_sound'           => true,
-                                'default_vibrate_timings' => true,
-                                'default_light_settings'  => true,
-                            ],
-                        ],
-                        'apns' => [
-                            'headers' => ['apns-priority' => '10'],
-                            'payload' => ['aps' => ['sound' => 'default', 'badge' => 1]],
-                        ],
-                    ],
-                ]
+                ['message' => $message]
             );
 
             if (!$res->successful()) {
