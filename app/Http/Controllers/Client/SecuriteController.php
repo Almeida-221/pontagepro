@@ -10,6 +10,7 @@ use App\Models\SecNotification;
 use App\Models\SecPointage;
 use App\Models\SecPointageResponse;
 use App\Models\SecPoste;
+use App\Models\SecRemplacement;
 use App\Models\SecTour;
 use App\Models\SecZone;
 use App\Models\User;
@@ -869,5 +870,52 @@ class SecuriteController extends Controller
         }
 
         return back()->with('error', 'Justification refusée.');
+    }
+
+    // ── Remplacements ─────────────────────────────────────────────────────────
+    public function remplacements(Request $request)
+    {
+        $company = $this->company();
+
+        $query = SecRemplacement::where('company_id', $company->id)
+            ->with(['agentSortant', 'agentEntrant', 'poste', 'zone'])
+            ->orderByDesc('date')
+            ->orderByDesc('heure_entree');
+
+        if ($request->filled('date')) {
+            $query->whereDate('date', $request->date);
+        }
+        if ($request->filled('zone_id')) {
+            $query->where('zone_id', $request->zone_id);
+        }
+        if ($request->filled('poste_id')) {
+            $query->where('poste_id', $request->poste_id);
+        }
+        if ($request->filled('agent_id')) {
+            $id = (int) $request->agent_id;
+            $query->where(fn($q) =>
+                $q->where('agent_sortant_id', $id)->orWhere('agent_entrant_id', $id)
+            );
+        }
+
+        $remplacements = $query->paginate(30)->withQueryString();
+
+        // Stats
+        $today   = SecRemplacement::where('company_id', $company->id)->whereDate('date', today())->count();
+        $week    = SecRemplacement::where('company_id', $company->id)->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()])->count();
+        $month   = SecRemplacement::where('company_id', $company->id)->whereMonth('date', now()->month)->whereYear('date', now()->year)->count();
+
+        $zones   = SecZone::where('company_id', $company->id)->orderBy('name')->get();
+        $postes  = SecPoste::where('company_id', $company->id)->orderBy('name')->get();
+        $agents  = User::where('company_id', $company->id)
+            ->whereIn('role', ['agent_securite', 'gerant_securite'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('client.securite.remplacements.index', compact(
+            'company', 'remplacements', 'zones', 'postes', 'agents',
+            'today', 'week', 'month'
+        ));
     }
 }

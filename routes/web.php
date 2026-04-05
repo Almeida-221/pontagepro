@@ -97,6 +97,8 @@ Route::prefix('espace-client')->name('client.')->middleware(['auth', 'client'])-
         Route::get('/justifications',                                     [SecuriteController::class, 'justifications'])->name('justifications');
         Route::post('/justifications/{justification}/valider',            [SecuriteController::class, 'validerJustification'])->name('justifications.valider');
         Route::post('/justifications/{justification}/rejeter',            [SecuriteController::class, 'rejeterJustification'])->name('justifications.rejeter');
+        // Remplacements
+        Route::get('/remplacements',                                      [SecuriteController::class, 'remplacements'])->name('remplacements');
     });
 
     // ── Pointage Ouvriers ────────────────────────────────────────────────────

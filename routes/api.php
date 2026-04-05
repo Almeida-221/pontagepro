@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Security\SecRapportController;
 use App\Http\Controllers\Api\Security\SecPointageController;
 use App\Http\Controllers\Api\Security\SecZoneController;
 use App\Http\Controllers\Api\Security\SecJustificationController;
+use App\Http\Controllers\Api\Security\SecRemplacementController;
 use Illuminate\Support\Facades\Route;
 
 // Mobile authentication
@@ -152,5 +153,11 @@ Route::prefix('securite')->name('securite.')->group(function () {
         Route::get('/justifications',              [SecJustificationController::class, 'index']);
         Route::post('/justifications',             [SecJustificationController::class, 'store']);
         Route::delete('/justifications/{justification}', [SecJustificationController::class, 'destroy']);
+
+        // Remplacements
+        Route::post('/remplacements/scan',              [SecRemplacementController::class, 'scan']);
+        Route::post('/remplacements/confirmer',         [SecRemplacementController::class, 'confirmer']);
+        Route::get('/remplacements',                    [SecRemplacementController::class, 'index']);
+        Route::get('/remplacements/{remplacement}',     [SecRemplacementController::class, 'show']);
     });
 });
