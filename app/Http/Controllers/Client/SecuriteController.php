@@ -998,7 +998,7 @@ class SecuriteController extends Controller
             $audioPath = $request->file('audio')->store('communications', 'public');
         }
 
-        SecCommunication::create([
+        $communication = SecCommunication::create([
             'company_id' => $company->id,
             'title'      => $v['title'],
             'message'    => $v['message'] ?? null,
@@ -1009,6 +1009,25 @@ class SecuriteController extends Controller
             'created_by' => auth()->id(),
             'expires_at' => $v['expires_at'] ?? null,
         ]);
+
+        // FCM push vers les agents/gérants de l'entreprise
+        $tokens = User::where('company_id', $company->id)
+            ->whereIn('role', ['agent_securite', 'gerant_securite'])
+            ->whereNotNull('fcm_token')
+            ->pluck('fcm_token')
+            ->toArray();
+
+        if (!empty($tokens)) {
+            SendFcmNotifications::dispatch(
+                $tokens,
+                '📢 ' . $communication->title,
+                $communication->message ?? 'Nouveau message vocal',
+                [
+                    'type'             => 'communication_new',
+                    'communication_id' => (string) $communication->id,
+                ]
+            );
+        }
 
         return back()->with('success', 'Communication envoyée aux agents ciblés.');
     }

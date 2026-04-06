@@ -37,7 +37,7 @@ class SecCommunicationController extends Controller
     {
         $user = $request->user();
 
-        if (in_array($user->role, ['admin_securite', 'gerant_securite'])) {
+        if (in_array($user->role, ['company_admin', 'gerant_securite'])) {
             $communications = SecCommunication::where('company_id', $user->company_id)
                 ->with('creator:id,name')
                 ->orderByDesc('created_at')
@@ -90,7 +90,7 @@ class SecCommunicationController extends Controller
     {
         $user = $request->user();
 
-        if (!in_array($user->role, ['admin_securite', 'gerant_securite'])) {
+        if (!in_array($user->role, ['company_admin', 'gerant_securite'])) {
             return response()->json(['message' => 'Action non autorisée.'], 403);
         }
 
@@ -171,7 +171,7 @@ class SecCommunicationController extends Controller
 
         // FCM silent push vers tous les appareils de l'entreprise
         $tokens = User::where('company_id', $user->company_id)
-            ->whereIn('role', ['agent_securite', 'gerant_securite', 'admin_securite'])
+            ->whereIn('role', ['agent_securite', 'gerant_securite', 'company_admin'])
             ->whereNotNull('fcm_token')
             ->pluck('fcm_token')
             ->toArray();
