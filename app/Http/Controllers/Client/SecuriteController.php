@@ -983,7 +983,7 @@ class SecuriteController extends Controller
         $v = $request->validate([
             'title'      => 'required|string|max:200',
             'message'    => 'nullable|string|max:1000',
-            'audio'      => 'nullable|file|mimes:mp3,wav,ogg,m4a,aac,webm|max:20480',
+            'audio'      => 'nullable|file|mimetypes:audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/ogg,audio/webm,video/mp4|max:20480',
             'expires_at' => 'nullable|date|after:now',
             'poste_ids'  => 'nullable|array',
             'poste_ids.*'=> 'integer|exists:sec_postes,id',

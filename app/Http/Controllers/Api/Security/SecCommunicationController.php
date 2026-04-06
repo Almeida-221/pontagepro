@@ -97,7 +97,7 @@ class SecCommunicationController extends Controller
         $request->validate([
             'title'      => 'required|string|max:255',
             'message'    => 'nullable|string',
-            'audio'      => 'nullable|file|mimes:mp3,m4a,aac,wav,ogg,webm,mpeg|max:20480',
+            'audio'      => 'nullable|file|mimetypes:audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/ogg,audio/webm,video/mp4|max:20480',
             'expires_at' => 'nullable|date|after:now',
             'poste_ids'  => 'nullable|array',
             'zone_ids'   => 'nullable|array',
