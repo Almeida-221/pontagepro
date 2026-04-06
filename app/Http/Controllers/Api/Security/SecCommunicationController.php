@@ -53,8 +53,8 @@ class SecCommunicationController extends Controller
             ->latest()
             ->first();
 
-        $agentPosteId = $affectation?->poste_id;
-        $agentZoneId  = $user->zone_id;
+        $agentPosteId = $affectation?->poste_id ? (int) $affectation->poste_id : null;
+        $agentZoneId  = $affectation?->zone_id  ? (int) $affectation->zone_id  : null;
         $agentTours   = collect($affectation?->tours ?? [])->pluck('type')->toArray();
 
         $communications = SecCommunication::where('company_id', $user->company_id)
@@ -63,13 +63,15 @@ class SecCommunicationController extends Controller
             ->where(function ($q) use ($agentPosteId) {
                 $q->whereNull('poste_ids');
                 if ($agentPosteId) {
-                    $q->orWhereJsonContains('poste_ids', $agentPosteId);
+                    $q->orWhereJsonContains('poste_ids', $agentPosteId)
+                      ->orWhereJsonContains('poste_ids', (string) $agentPosteId);
                 }
             })
             ->where(function ($q) use ($agentZoneId) {
                 $q->whereNull('zone_ids');
                 if ($agentZoneId) {
-                    $q->orWhereJsonContains('zone_ids', $agentZoneId);
+                    $q->orWhereJsonContains('zone_ids', $agentZoneId)
+                      ->orWhereJsonContains('zone_ids', (string) $agentZoneId);
                 }
             })
             ->where(function ($q) use ($agentTours) {
@@ -116,12 +118,12 @@ class SecCommunicationController extends Controller
             'audio_path' => $audioPath,
             'created_by' => $user->id,
             'expires_at' => $request->expires_at,
-            'poste_ids'  => !empty($request->poste_ids) ? $request->poste_ids : null,
-            'zone_ids'   => !empty($request->zone_ids)  ? $request->zone_ids  : null,
+            'poste_ids'  => !empty($request->poste_ids) ? array_map('intval', $request->poste_ids) : null,
+            'zone_ids'   => !empty($request->zone_ids)  ? array_map('intval', $request->zone_ids)  : null,
             'tour_ids'   => !empty($request->tour_ids)  ? $request->tour_ids  : null,
         ]);
 
-        // FCM push vers les agents/gérants de l'entreprise
+        // FCM push synchrone vers les agents/gérants
         $tokens = User::where('company_id', $user->company_id)
             ->whereIn('role', ['agent_securite', 'gerant_securite'])
             ->whereNotNull('fcm_token')
@@ -129,7 +131,7 @@ class SecCommunicationController extends Controller
             ->toArray();
 
         if (!empty($tokens)) {
-            SendFcmNotifications::dispatch(
+            SendFcmNotifications::dispatchSync(
                 $tokens,
                 '📢 ' . $communication->title,
                 $communication->message ?? 'Nouveau message vocal',

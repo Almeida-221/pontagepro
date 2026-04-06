@@ -1003,8 +1003,8 @@ class SecuriteController extends Controller
             'title'      => $v['title'],
             'message'    => $v['message'] ?? null,
             'audio_path' => $audioPath,
-            'poste_ids'  => !empty($v['poste_ids']) ? $v['poste_ids'] : null,
-            'zone_ids'   => !empty($v['zone_ids'])  ? $v['zone_ids']  : null,
+            'poste_ids'  => !empty($v['poste_ids']) ? array_map('intval', $v['poste_ids']) : null,
+            'zone_ids'   => !empty($v['zone_ids'])  ? array_map('intval', $v['zone_ids'])  : null,
             'tour_ids'   => !empty($v['tour_ids'])  ? $v['tour_ids']  : null,
             'created_by' => auth()->id(),
             'expires_at' => $v['expires_at'] ?? null,
@@ -1018,7 +1018,7 @@ class SecuriteController extends Controller
             ->toArray();
 
         if (!empty($tokens)) {
-            SendFcmNotifications::dispatch(
+            SendFcmNotifications::dispatchSync(
                 $tokens,
                 '📢 ' . $communication->title,
                 $communication->message ?? 'Nouveau message vocal',
