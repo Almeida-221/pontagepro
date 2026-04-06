@@ -164,6 +164,7 @@ Route::prefix('securite')->name('securite.')->group(function () {
 
         // Communications
         Route::get('/communications',                        [SecCommunicationController::class, 'index']);
+        Route::post('/communications',                       [SecCommunicationController::class, 'store']);
         Route::delete('/communications/{communication}',     [SecCommunicationController::class, 'destroy']);
     });
 });
