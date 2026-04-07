@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Module;
+use App\Models\SiteSetting;
 
 class HomeController extends Controller
 {
@@ -12,6 +13,8 @@ class HomeController extends Controller
             $q->where('is_active', true)->orderBy('price');
         }])->get();
 
-        return view('welcome', compact('modules'));
+        $settings = SiteSetting::all_settings();
+
+        return view('welcome', compact('modules', 'settings'));
     }
 }

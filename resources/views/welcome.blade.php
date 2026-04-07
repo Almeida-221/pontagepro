@@ -7,30 +7,35 @@
 <section class="relative text-white py-20 overflow-hidden" style="background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #312e81 100%);">
 
     {{-- Background Slideshow --}}
+    @php
+        $slides = array_filter([
+            $settings['slide1_path'] ?? '',
+            $settings['slide2_path'] ?? '',
+            $settings['slide3_path'] ?? '',
+            $settings['slide4_path'] ?? '',
+        ]);
+        $slides = array_values($slides);
+    @endphp
     <div id="hero-slideshow" class="absolute inset-0 z-0">
-        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-100">
-            <img src="{{ asset('images/hero/slide1.jpg') }}" alt="" class="w-full h-full object-cover">
+        @forelse($slides as $idx => $slidePath)
+        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 {{ $idx === 0 ? 'opacity-100' : 'opacity-0' }}">
+            <img src="{{ Storage::url($slidePath) }}" alt="" class="w-full h-full object-cover">
         </div>
-        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0">
-            <img src="{{ asset('images/hero/slide2.jpg') }}" alt="" class="w-full h-full object-cover">
-        </div>
-        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0">
-            <img src="{{ asset('images/hero/slide3.jpg') }}" alt="" class="w-full h-full object-cover">
-        </div>
-        <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0">
-            <img src="{{ asset('images/hero/slide4.jpg') }}" alt="" class="w-full h-full object-cover">
-        </div>
+        @empty
+        {{-- No slides configured: keep gradient background --}}
+        @endforelse
         {{-- Dark overlay so text stays readable --}}
         <div class="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-blue-800/75 to-indigo-900/80"></div>
     </div>
 
-    {{-- Slide dots --}}
+    {{-- Slide dots (only shown when multiple slides exist) --}}
+    @if(count($slides) > 1)
     <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white transition-opacity" onclick="heroGoTo(0)"></button>
-        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white opacity-40 transition-opacity" onclick="heroGoTo(1)"></button>
-        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white opacity-40 transition-opacity" onclick="heroGoTo(2)"></button>
-        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white opacity-40 transition-opacity" onclick="heroGoTo(3)"></button>
+        @foreach($slides as $idx => $slidePath)
+        <button class="hero-dot w-2.5 h-2.5 rounded-full bg-white {{ $idx > 0 ? 'opacity-40' : '' }} transition-opacity" onclick="heroGoTo({{ $idx }})"></button>
+        @endforeach
     </div>
+    @endif
 
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -47,11 +52,22 @@
                     Facile à utiliser, accessible partout, et adapté à toutes les tailles d'entreprises.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="{{ route('register.modules') }}" class="inline-flex items-center justify-center bg-white text-blue-700 font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition shadow-lg">
+                    <a href="{{ route('register.modules') }}" class="inline-flex items-center justify-center bg-white text-blue-700 font-semibold px-8 py-3 rounded-full hover:bg-blue-50 transition shadow-lg">
                         Commencer gratuitement
                     </a>
-                    <a href="#comment-ca-marche" class="inline-flex items-center justify-center border-2 border-white text-white font-semibold px-8 py-3 rounded-lg hover:bg-white hover:text-blue-700 transition">
-                        Voir comment ça marche
+                    @if(!empty($settings['video_url']))
+                    <button onclick="openVideoModal()" class="inline-flex items-center justify-center gap-2 bg-orange-500 text-white font-semibold px-8 py-3 rounded-full hover:bg-orange-600 transition shadow-lg">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        Découvrir en vidéo
+                    </button>
+                    @endif
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 border-2 border-white/60 bg-white/10 text-white font-semibold px-8 py-3 rounded-full hover:bg-white/20 transition backdrop-blur-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        Se connecter
                     </a>
                 </div>
                 {{-- small stats --}}
@@ -222,16 +238,18 @@
     var total  = slides.length;
     var timer;
 
+    if (total < 2) return; // No carousel needed with 0 or 1 slide
+
     function heroGoTo(n) {
         slides[current].classList.remove('opacity-100');
         slides[current].classList.add('opacity-0');
-        dots[current].classList.add('opacity-40');
+        if (dots[current]) dots[current].classList.add('opacity-40');
 
         current = (n + total) % total;
 
         slides[current].classList.remove('opacity-0');
         slides[current].classList.add('opacity-100');
-        dots[current].classList.remove('opacity-40');
+        if (dots[current]) dots[current].classList.remove('opacity-40');
     }
 
     window.heroGoTo = heroGoTo;
@@ -239,11 +257,29 @@
     function next() { heroGoTo(current + 1); }
     timer = setInterval(next, 4000);
 
-    // Pause on hover
     var section = document.querySelector('#hero-slideshow');
-    section.addEventListener('mouseenter', function() { clearInterval(timer); });
-    section.addEventListener('mouseleave', function() { timer = setInterval(next, 4000); });
+    if (section) {
+        section.addEventListener('mouseenter', function() { clearInterval(timer); });
+        section.addEventListener('mouseleave', function() { timer = setInterval(next, 4000); });
+    }
 })();
+
+// Video modal
+function openVideoModal() {
+    document.getElementById('video-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function closeVideoModal() {
+    var modal = document.getElementById('video-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    // Stop video by resetting the iframe src
+    var iframe = modal.querySelector('iframe');
+    if (iframe) { var src = iframe.src; iframe.src = ''; iframe.src = src; }
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeVideoModal();
+});
 </script>
 @endpush
 
@@ -724,4 +760,31 @@ function switchModule(panelId) {
         </div>
     </div>
 </section>
+
+{{-- Video Modal --}}
+@if(!empty($settings['video_url']))
+<div id="video-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    {{-- Backdrop --}}
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeVideoModal()"></div>
+    {{-- Modal box --}}
+    <div class="relative z-10 w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl">
+        <div class="flex items-center justify-between px-4 py-3 bg-gray-900">
+            <span class="text-white font-semibold text-sm">Découvrir la plateforme en vidéo</span>
+            <button onclick="closeVideoModal()" class="text-gray-400 hover:text-white transition p-1 rounded-lg hover:bg-gray-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="aspect-video">
+            <iframe src="{{ $settings['video_url'] }}"
+                class="w-full h-full"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+@endif
 @endsection

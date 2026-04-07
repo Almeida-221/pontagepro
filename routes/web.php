@@ -3,7 +3,9 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PlanController;
+use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
@@ -135,4 +137,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('abonnements/{subscription}/suspendre', [SubscriptionController::class, 'suspend'])->name('subscriptions.suspend');
     Route::resource('factures', InvoiceController::class)->only(['index'])->parameters(['factures' => 'invoice']);
     Route::resource('plans', PlanController::class)->except(['show']);
+
+    // Modules (activités)
+    Route::get('modules', [ModuleController::class, 'index'])->name('modules.index');
+    Route::post('modules/{module}/toggle', [ModuleController::class, 'toggle'])->name('modules.toggle');
+
+    // Site settings
+    Route::get('parametres', [SiteSettingController::class, 'index'])->name('settings.index');
+    Route::put('parametres', [SiteSettingController::class, 'update'])->name('settings.update');
 });
