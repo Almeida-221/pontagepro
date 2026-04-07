@@ -43,12 +43,34 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <p class="text-xs text-gray-500 mt-1">Format international sans « + » (ex : 221771234567). Laissez vide pour masquer l'icône.</p>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">URL de la vidéo de présentation</label>
-                    <input type="url" name="video_url" value="{{ $settings['video_url'] ?? '' }}"
-                        placeholder="https://www.youtube.com/embed/..."
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p class="text-xs text-gray-500 mt-1">Lien embed YouTube ou autre. Laissez vide pour masquer le bouton.</p>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vidéo de présentation</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {{-- Option 1 : URL YouTube --}}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <p class="text-xs font-semibold text-gray-600 mb-2">Option 1 — Lien YouTube / externe</p>
+                            <input type="url" name="video_url" value="{{ $settings['video_url'] ?? '' }}"
+                                placeholder="https://www.youtube.com/embed/..."
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-400 mt-1">Utilisez l'URL embed (youtube.com/embed/...).</p>
+                        </div>
+                        {{-- Option 2 : Fichier MP4 --}}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <p class="text-xs font-semibold text-gray-600 mb-2">Option 2 — Fichier vidéo (MP4)</p>
+                            @if(!empty($settings['video_path']))
+                                <video src="{{ asset('storage/' . $settings['video_path']) }}"
+                                    class="w-full h-20 rounded object-cover mb-2" controls></video>
+                                <label class="flex items-center gap-2 text-xs text-red-600 cursor-pointer mb-2">
+                                    <input type="checkbox" name="delete_video" value="1" class="rounded">
+                                    Supprimer cette vidéo
+                                </label>
+                            @endif
+                            <input type="file" name="video_file" accept="video/mp4,video/webm,video/quicktime"
+                                class="block w-full text-xs text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <p class="text-xs text-gray-400 mt-1">MP4, WebM — max 200 Mo.</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Si les deux sont renseignés, le fichier vidéo est prioritaire. Laissez tout vide pour masquer le bouton.</p>
                 </div>
             </div>
         </div>

@@ -24,6 +24,7 @@ class SiteSettingController extends Controller
             'site_phone'      => 'nullable|string|max:30',
             'whatsapp_number' => 'nullable|string|max:30',
             'video_url'       => 'nullable|url|max:500',
+            'video_file'      => 'nullable|mimes:mp4,mov,avi,webm|max:204800',
             'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:10240',
             'slide1'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'slide2'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
@@ -34,6 +35,19 @@ class SiteSettingController extends Controller
         // Simple text settings
         foreach (['site_name', 'site_address', 'site_email', 'site_phone', 'whatsapp_number', 'video_url'] as $key) {
             SiteSetting::set($key, $request->input($key, ''));
+        }
+
+        // Video file upload (MP4)
+        if ($request->hasFile('video_file')) {
+            $old = SiteSetting::get('video_path');
+            if ($old) Storage::disk('public')->delete($old);
+            $path = $request->file('video_file')->store('videos', 'public');
+            SiteSetting::set('video_path', $path);
+        }
+        if ($request->boolean('delete_video')) {
+            $old = SiteSetting::get('video_path');
+            if ($old) Storage::disk('public')->delete($old);
+            SiteSetting::set('video_path', '');
         }
 
         // Logo upload

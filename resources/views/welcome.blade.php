@@ -55,7 +55,7 @@
                     <a href="{{ route('register.modules') }}" class="inline-flex items-center justify-center bg-white text-blue-700 font-semibold px-8 py-3 rounded-full hover:bg-blue-50 transition shadow-lg">
                         Commencer gratuitement
                     </a>
-                    @if(!empty($settings['video_url']))
+                    @if(!empty($settings['video_url']) || !empty($settings['video_path']))
                     <button onclick="openVideoModal()" class="inline-flex items-center justify-center gap-2 bg-orange-500 text-white font-semibold px-8 py-3 rounded-full hover:bg-orange-600 transition shadow-lg">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z"/>
@@ -273,9 +273,10 @@ function closeVideoModal() {
     var modal = document.getElementById('video-modal');
     modal.classList.add('hidden');
     document.body.style.overflow = '';
-    // Stop video by resetting the iframe src
     var iframe = modal.querySelector('iframe');
     if (iframe) { var src = iframe.src; iframe.src = ''; iframe.src = src; }
+    var vid = modal.querySelector('video');
+    if (vid) { vid.pause(); vid.currentTime = 0; }
 }
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeVideoModal();
@@ -762,11 +763,10 @@ function switchModule(panelId) {
 </section>
 
 {{-- Video Modal --}}
-@if(!empty($settings['video_url']))
+@php $hasVideo = !empty($settings['video_path']) || !empty($settings['video_url']); @endphp
+@if($hasVideo)
 <div id="video-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-    {{-- Backdrop --}}
     <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeVideoModal()"></div>
-    {{-- Modal box --}}
     <div class="relative z-10 w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl">
         <div class="flex items-center justify-between px-4 py-3 bg-gray-900">
             <span class="text-white font-semibold text-sm">Découvrir la plateforme en vidéo</span>
@@ -777,12 +777,18 @@ function switchModule(panelId) {
             </button>
         </div>
         <div class="aspect-video">
-            <iframe src="{{ $settings['video_url'] }}"
-                class="w-full h-full"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
-            </iframe>
+            @if(!empty($settings['video_path']))
+                <video id="modal-video" src="{{ asset('storage/' . $settings['video_path']) }}"
+                    class="w-full h-full" controls autoplay>
+                </video>
+            @else
+                <iframe src="{{ $settings['video_url'] }}"
+                    class="w-full h-full"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            @endif
         </div>
     </div>
 </div>
