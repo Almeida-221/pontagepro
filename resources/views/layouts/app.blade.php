@@ -34,7 +34,7 @@
                     @php $logoPath = \App\Models\SiteSetting::get('logo_path'); $siteName = \App\Models\SiteSetting::get('site_name', 'SB Pointage'); @endphp
                     <a href="{{ route('home') }}" class="flex items-center space-x-2">
                         @if($logoPath)
-                            <img src="{{ Storage::url($logoPath) }}" alt="{{ $siteName }}" class="h-10 w-auto">
+                            <img src="{{ asset('storage/' . $logoPath) }}" alt="{{ $siteName }}" class="h-10 w-auto">
                         @else
                             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center space-x-2 mb-4">
                         @if($ftLogo)
-                            <img src="{{ Storage::url($ftLogo) }}" alt="{{ $ftName }}" class="h-10 w-auto brightness-0 invert">
+                            <img src="{{ asset('storage/' . $ftLogo) }}" alt="{{ $ftName }}" class="h-10 w-auto brightness-0 invert">
                         @else
                             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

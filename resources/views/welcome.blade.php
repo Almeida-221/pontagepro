@@ -19,7 +19,7 @@
     <div id="hero-slideshow" class="absolute inset-0 z-0">
         @forelse($slides as $idx => $slidePath)
         <div class="hero-slide absolute inset-0 transition-opacity duration-1000 {{ $idx === 0 ? 'opacity-100' : 'opacity-0' }}">
-            <img src="{{ Storage::url($slidePath) }}" alt="" class="w-full h-full object-cover">
+            <img src="{{ asset('storage/' . $slidePath) }}" alt="" class="w-full h-full object-cover">
         </div>
         @empty
         {{-- No slides configured: keep gradient background --}}

@@ -59,7 +59,7 @@
             <div class="flex items-start gap-6">
                 @if(!empty($settings['logo_path']))
                     <div class="flex-shrink-0">
-                        <img src="{{ Storage::url($settings['logo_path']) }}" alt="Logo actuel" class="h-16 w-auto rounded-lg border border-gray-200 p-1 bg-gray-50">
+                        <img src="{{ asset('storage/' . $settings['logo_path']) }}" alt="Logo actuel" class="h-16 w-auto rounded-lg border border-gray-200 p-1 bg-gray-50">
                         <p class="text-xs text-gray-400 mt-1 text-center">Logo actuel</p>
                     </div>
                 @endif
@@ -85,7 +85,7 @@
                     <p class="text-sm font-medium text-gray-700 mb-3">Image {{ $i }}</p>
                     @if($current)
                         <div class="mb-3 relative">
-                            <img src="{{ Storage::url($current) }}" alt="Slide {{ $i }}"
+                            <img src="{{ asset('storage/' . $current) }}" alt="Slide {{ $i }}"
                                 class="w-full h-32 object-cover rounded-lg border border-gray-200">
                             <label class="flex items-center gap-2 mt-2 text-xs text-red-600 cursor-pointer">
                                 <input type="checkbox" name="delete_slide{{ $i }}" value="1" class="rounded">
