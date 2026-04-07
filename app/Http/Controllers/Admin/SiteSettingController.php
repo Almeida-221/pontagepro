@@ -24,11 +24,11 @@ class SiteSettingController extends Controller
             'site_phone'      => 'nullable|string|max:30',
             'whatsapp_number' => 'nullable|string|max:30',
             'video_url'       => 'nullable|url|max:500',
-            'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:2048',
-            'slide1'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
-            'slide2'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
-            'slide3'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
-            'slide4'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
+            'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:10240',
+            'slide1'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'slide2'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'slide3'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'slide4'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
         // Simple text settings
