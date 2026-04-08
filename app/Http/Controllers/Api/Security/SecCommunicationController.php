@@ -124,22 +124,26 @@ class SecCommunicationController extends Controller
         ]);
 
         // FCM push synchrone vers les agents/gérants
-        $tokens = User::where('company_id', $user->company_id)
-            ->whereIn('role', ['agent_securite', 'gerant_securite'])
-            ->whereNotNull('fcm_token')
-            ->pluck('fcm_token')
-            ->toArray();
+        try {
+            $tokens = User::where('company_id', $user->company_id)
+                ->whereIn('role', ['agent_securite', 'gerant_securite'])
+                ->whereNotNull('fcm_token')
+                ->pluck('fcm_token')
+                ->toArray();
 
-        if (!empty($tokens)) {
-            SendFcmNotifications::dispatchSync(
-                $tokens,
-                '📢 ' . $communication->title,
-                $communication->message ?? 'Nouveau message vocal',
-                [
-                    'type'             => 'communication_new',
-                    'communication_id' => (string) $communication->id,
-                ]
-            );
+            if (!empty($tokens)) {
+                SendFcmNotifications::dispatchSync(
+                    $tokens,
+                    '📢 ' . $communication->title,
+                    $communication->message ?? 'Nouveau message vocal',
+                    [
+                        'type'             => 'communication_new',
+                        'communication_id' => (string) $communication->id,
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            \Log::error('[Communications] FCM dispatch failed: ' . $e->getMessage());
         }
 
         $communication->load('creator:id,name');
@@ -172,17 +176,21 @@ class SecCommunicationController extends Controller
         $communication->delete();
 
         // FCM silent push vers tous les appareils de l'entreprise
-        $tokens = User::where('company_id', $user->company_id)
-            ->whereIn('role', ['agent_securite', 'gerant_securite', 'company_admin'])
-            ->whereNotNull('fcm_token')
-            ->pluck('fcm_token')
-            ->toArray();
+        try {
+            $tokens = User::where('company_id', $user->company_id)
+                ->whereIn('role', ['agent_securite', 'gerant_securite', 'company_admin'])
+                ->whereNotNull('fcm_token')
+                ->pluck('fcm_token')
+                ->toArray();
 
-        if (!empty($tokens)) {
-            SendFcmNotifications::dispatch($tokens, '', '', [
-                'type'             => 'communication_deleted',
-                'communication_id' => (string) $commId,
-            ]);
+            if (!empty($tokens)) {
+                SendFcmNotifications::dispatch($tokens, '', '', [
+                    'type'             => 'communication_deleted',
+                    'communication_id' => (string) $commId,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('[Communications] FCM delete dispatch failed: ' . $e->getMessage());
         }
 
         return response()->json(['message' => 'Communication supprimée.']);
