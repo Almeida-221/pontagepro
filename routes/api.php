@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Security\SecPointageController;
 use App\Http\Controllers\Api\Security\SecZoneController;
 use App\Http\Controllers\Api\Security\SecJustificationController;
 use App\Http\Controllers\Api\Security\SecRemplacementController;
+use App\Http\Controllers\Api\AdVideoApiController;
 use App\Http\Controllers\Api\Security\SecCommunicationController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,7 @@ Route::post('/auth/setup-password', [MobileAuthController::class, 'setupPassword
 Route::post('/auth/login', [MobileAuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
+
     Route::post('/auth/logout', [MobileAuthController::class, 'logout']);
     Route::get('/auth/me', [MobileAuthController::class, 'me']);
     Route::post('/auth/change-pin', [MobileAuthController::class, 'changePin']);
@@ -76,6 +78,9 @@ Route::prefix('securite')->name('securite.')->group(function () {
 
     // Protected routes
     Route::middleware(['auth:sanctum', 'securite'])->group(function () {
+
+        // Vidéos publicitaires
+        Route::get('/ad-videos', [AdVideoApiController::class, 'index']);
 
         // Auth
         Route::post('/auth/logout',        [SecAuthController::class, 'logout']);

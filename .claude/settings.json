@@ -6,7 +6,8 @@
       "Bash(php -r ':*)",
       "Bash(git commit -m ':*)",
       "Bash(grep -E \"\\\\.\\(dart\\)$\")",
-      "Bash(grep -E \"\\\\.\\(php|blade\\\\.php\\)$\")"
+      "Bash(grep -E \"\\\\.\\(php|blade\\\\.php\\)$\")",
+      "Bash(grep -n \"isValidated\\\\|is_validated\\\\|validated\" c:/Users/almei/sb_securite/lib/data/models/*.dart)"
     ]
   }
 }

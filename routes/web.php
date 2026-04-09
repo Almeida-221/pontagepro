@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\PlanController;
+use App\Http\Controllers\Admin\AdVideoController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\AuthController;
@@ -145,4 +146,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Site settings
     Route::get('parametres', [SiteSettingController::class, 'index'])->name('settings.index');
     Route::put('parametres', [SiteSettingController::class, 'update'])->name('settings.update');
+
+    // Vidéos publicitaires
+    Route::resource('ad-videos', AdVideoController::class)->parameters(['ad-videos' => 'adVideo']);
+    Route::post('ad-videos/{adVideo}/toggle', [AdVideoController::class, 'toggle'])->name('ad-videos.toggle');
 });
