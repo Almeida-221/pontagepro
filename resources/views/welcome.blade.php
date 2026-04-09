@@ -268,13 +268,19 @@
 function openVideoModal() {
     document.getElementById('video-modal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    var iframe = document.querySelector('#video-modal iframe');
+    if (iframe && iframe.dataset.src && !iframe.src) {
+        iframe.src = iframe.dataset.src;
+    }
+    var vid = document.querySelector('#video-modal video');
+    if (vid) { vid.play(); }
 }
 function closeVideoModal() {
     var modal = document.getElementById('video-modal');
     modal.classList.add('hidden');
     document.body.style.overflow = '';
     var iframe = modal.querySelector('iframe');
-    if (iframe) { var src = iframe.src; iframe.src = ''; iframe.src = src; }
+    if (iframe) { iframe.src = ''; }
     var vid = modal.querySelector('video');
     if (vid) { vid.pause(); vid.currentTime = 0; }
 }
@@ -779,10 +785,11 @@ function switchModule(panelId) {
         <div class="aspect-video">
             @if(!empty($settings['video_path']))
                 <video id="modal-video" src="{{ asset('storage/' . $settings['video_path']) }}"
-                    class="w-full h-full" controls autoplay>
+                    class="w-full h-full" controls>
                 </video>
             @else
-                <iframe src="{{ $settings['video_url'] }}"
+                <iframe src=""
+                    data-src="{{ $settings['video_url'] }}"
                     class="w-full h-full"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

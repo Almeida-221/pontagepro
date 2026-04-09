@@ -123,13 +123,59 @@ class SecCommunicationController extends Controller
             'tour_ids'   => !empty($request->tour_ids)  ? $request->tour_ids  : null,
         ]);
 
-        // FCM push synchrone vers les agents/gérants
+        // FCM push synchrone vers les agents/gérants (filtré si critères précisés)
         try {
-            $tokens = User::where('company_id', $user->company_id)
-                ->whereIn('role', ['agent_securite', 'gerant_securite'])
-                ->whereNotNull('fcm_token')
-                ->pluck('fcm_token')
-                ->toArray();
+            $hasFilter = !empty($communication->poste_ids)
+                      || !empty($communication->zone_ids)
+                      || !empty($communication->tour_ids);
+
+            if (!$hasFilter) {
+                // Pas de filtre → tout le monde (agents + gérants)
+                $tokens = User::where('company_id', $user->company_id)
+                    ->whereIn('role', ['agent_securite', 'gerant_securite'])
+                    ->whereNotNull('fcm_token')
+                    ->pluck('fcm_token')
+                    ->toArray();
+            } else {
+                // Agents filtrés par zone, poste et/ou tour
+                $agentQuery = User::where('company_id', $user->company_id)
+                    ->where('role', 'agent_securite')
+                    ->whereNotNull('fcm_token');
+
+                if (!empty($communication->zone_ids)) {
+                    $agentQuery->whereIn('zone_id', $communication->zone_ids);
+                }
+
+                if (!empty($communication->poste_ids) || !empty($communication->tour_ids)) {
+                    $agentQuery->whereHas('affectation', function ($q) use ($communication) {
+                        $q->where('is_active', true);
+                        if (!empty($communication->poste_ids)) {
+                            $q->whereIn('poste_id', $communication->poste_ids);
+                        }
+                        if (!empty($communication->tour_ids)) {
+                            $q->where(function ($tq) use ($communication) {
+                                foreach ($communication->tour_ids as $tour) {
+                                    $tq->orWhereJsonContains('tours', ['type' => $tour]);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // Gérants filtrés par zone si zone_ids précisé, sinon tous les gérants
+                $gerantQuery = User::where('company_id', $user->company_id)
+                    ->where('role', 'gerant_securite')
+                    ->whereNotNull('fcm_token');
+                if (!empty($communication->zone_ids)) {
+                    $gerantQuery->whereIn('zone_id', $communication->zone_ids);
+                }
+
+                $tokens = $agentQuery->pluck('fcm_token')
+                    ->merge($gerantQuery->pluck('fcm_token'))
+                    ->unique()
+                    ->values()
+                    ->toArray();
+            }
 
             if (!empty($tokens)) {
                 SendFcmNotifications::dispatchSync(
