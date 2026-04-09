@@ -23,10 +23,10 @@ Route::post('/auth/check-phone', [MobileAuthController::class, 'checkPhone']);
 Route::post('/auth/setup-password', [MobileAuthController::class, 'setupPassword']);
 Route::post('/auth/login', [MobileAuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+// Vidéos publicitaires – route publique (pas besoin d'auth)
+Route::get('/ad-videos', [AdVideoApiController::class, 'index']);
 
-    // Vidéos publicitaires (app pointage ouvriers)
-    Route::get('/ad-videos', [AdVideoApiController::class, 'index']);
+Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/auth/logout', [MobileAuthController::class, 'logout']);
     Route::get('/auth/me', [MobileAuthController::class, 'me']);
@@ -79,11 +79,11 @@ Route::prefix('securite')->name('securite.')->group(function () {
     Route::post('/auth/setup-password', [SecAuthController::class, 'setupPassword']);
     Route::post('/auth/login',          [SecAuthController::class, 'login']);
 
+    // Vidéos publicitaires – route publique
+    Route::get('/ad-videos', [AdVideoApiController::class, 'index']);
+
     // Protected routes
     Route::middleware(['auth:sanctum', 'securite'])->group(function () {
-
-        // Vidéos publicitaires
-        Route::get('/ad-videos', [AdVideoApiController::class, 'index']);
 
         // Auth
         Route::post('/auth/logout',        [SecAuthController::class, 'logout']);
