@@ -54,7 +54,7 @@ class SecCommunicationController extends Controller
             ->first();
 
         $agentPosteId = $affectation?->poste_id ? (int) $affectation->poste_id : null;
-        $agentZoneId  = $affectation?->zone_id  ? (int) $affectation->zone_id  : null;
+        $agentZoneId  = $user->zone_id         ? (int) $user->zone_id          : null; // zone sur User, pas sur SecAffectation
         $agentTours   = collect($affectation?->tours ?? [])->pluck('type')->toArray();
 
         $communications = SecCommunication::where('company_id', $user->company_id)
