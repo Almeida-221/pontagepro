@@ -48,7 +48,7 @@
                     Simplifiez la gestion de pointage de vos ouvriers
                 </h1>
                 <p class="text-xl text-blue-100 mb-8 leading-relaxed">
-                    PointagePro vous permet de suivre la présence de vos employés journaliers en temps réel.
+                    SB Pointage vous permet de suivre la présence de vos employés journaliers en temps réel.
                     Facile à utiliser, accessible partout, et adapté à toutes les tailles d'entreprises.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4">

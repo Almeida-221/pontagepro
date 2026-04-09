@@ -126,6 +126,60 @@
             </div>
         </div>
 
+        {{-- Méthodes de paiement --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-1 pb-3 border-b border-gray-100">
+                Méthodes de paiement
+            </h2>
+            <p class="text-xs text-gray-500 mb-5">Activez les méthodes de paiement qui s'affichent sur la page d'inscription.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" name="payment_orange_money" value="1"
+                        {{ !empty($settings['payment_orange_money']) ? 'checked' : '' }}
+                        class="w-4 h-4 text-orange-500 rounded">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 fill-white"><path d="M12 2a10 10 0 110 20A10 10 0 0112 2zm0 2a8 8 0 100 16A8 8 0 0012 4z"/></svg>
+                        </div>
+                        <span class="text-sm font-medium text-gray-800">Orange Money</span>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" name="payment_wave" value="1"
+                        {{ !empty($settings['payment_wave']) ? 'checked' : '' }}
+                        class="w-4 h-4 text-blue-500 rounded">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 fill-white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        </div>
+                        <span class="text-sm font-medium text-gray-800">Wave</span>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" name="payment_visa" value="1"
+                        {{ !empty($settings['payment_visa']) ? 'checked' : '' }}
+                        class="w-4 h-4 text-indigo-500 rounded">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xs">VISA</span>
+                        </div>
+                        <span class="text-sm font-medium text-gray-800">Carte Visa</span>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" name="payment_bank" value="1"
+                        {{ !empty($settings['payment_bank']) ? 'checked' : '' }}
+                        class="w-4 h-4 text-gray-500 rounded">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        </div>
+                        <span class="text-sm font-medium text-gray-800">Carte bancaire</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+
         <div class="flex justify-end">
             <button type="submit"
                 class="bg-blue-600 text-white px-8 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition shadow-sm">

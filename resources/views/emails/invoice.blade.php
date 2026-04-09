@@ -19,7 +19,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>PointagePro</h1>
+            <h1>SB Pointage</h1>
             <p style="margin:5px 0 0;">Facture {{ $invoice->invoice_number }}</p>
         </div>
         <div class="body">
@@ -46,7 +46,7 @@
             @endif
         </div>
         <div class="footer">
-            <p>&copy; {{ date('Y') }} PointagePro. Tous droits réservés.</p>
+            <p>&copy; {{ date('Y') }} SB Pointage. Tous droits réservés.</p>
         </div>
     </div>
 </body>

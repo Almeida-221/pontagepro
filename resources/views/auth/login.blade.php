@@ -12,7 +12,7 @@
                 </svg>
             </div>
         </div>
-        <h2 class="text-center text-3xl font-bold text-gray-900">PointagePro</h2>
+        <h2 class="text-center text-3xl font-bold text-gray-900">SB Pointage</h2>
         <p class="mt-2 text-center text-sm text-gray-600">Connectez-vous a votre compte</p>
     </div>
 

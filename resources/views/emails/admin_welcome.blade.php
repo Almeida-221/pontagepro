@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Accès PointagePro Mobile</title>
+    <title>Accès SB Pointage Mobile</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
         .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -18,12 +18,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>PointagePro</h1>
+            <h1>SB Pointage</h1>
             <p style="margin:5px 0 0;">Application de gestion de pointage</p>
         </div>
         <div class="body">
             <h2>Bonjour {{ $admin->name }},</h2>
-            <p>Vous avez été ajouté(e) en tant qu'<strong>Administrateur</strong> de l'entreprise <strong>{{ $company->name }}</strong> sur PointagePro.</p>
+            <p>Vous avez été ajouté(e) en tant qu'<strong>Administrateur</strong> de l'entreprise <strong>{{ $company->name }}</strong> sur SB Pointage.</p>
             <p>Voici vos identifiants pour vous connecter sur l'application mobile :</p>
 
             <div class="credentials">
@@ -37,10 +37,10 @@
                 Ne partagez jamais votre code PIN. Vous pouvez le changer depuis l'application mobile.
             </p>
 
-            <p>Téléchargez l'application PointagePro et connectez-vous avec votre numéro de téléphone et ce code PIN.</p>
+            <p>Téléchargez l'application SB Pointage et connectez-vous avec votre numéro de téléphone et ce code PIN.</p>
         </div>
         <div class="footer">
-            <p>&copy; {{ date('Y') }} PointagePro. Tous droits réservés.</p>
+            <p>&copy; {{ date('Y') }} SB Pointage. Tous droits réservés.</p>
         </div>
     </div>
 </body>

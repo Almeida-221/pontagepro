@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Bienvenue sur PointagePro</title>
+    <title>Bienvenue sur SB Pointage</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
         .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -17,12 +17,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>PointagePro</h1>
+            <h1>SB Pointage</h1>
             <p style="margin:5px 0 0;">Gestion de pointage des employés</p>
         </div>
         <div class="body">
             <h2>Bienvenue, {{ $company->full_owner_name }} !</h2>
-            <p>Votre compte a été créé avec succès sur <strong>PointagePro</strong>.</p>
+            <p>Votre compte a été créé avec succès sur <strong>SB Pointage</strong>.</p>
             <p>Voici vos identifiants de connexion :</p>
             <div class="credentials">
                 <p><strong>Email :</strong> {{ $user->email }}</p>
@@ -32,7 +32,7 @@
             <a href="{{ config('app.url') }}/connexion" class="btn">Se connecter</a>
         </div>
         <div class="footer">
-            <p>&copy; {{ date('Y') }} PointagePro. Tous droits réservés.</p>
+            <p>&copy; {{ date('Y') }} SB Pointage. Tous droits réservés.</p>
         </div>
     </div>
 </body>

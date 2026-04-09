@@ -12,7 +12,7 @@
         </div>
         <h1 class="text-2xl font-bold text-gray-900 mb-3">Votre inscription est confirmee !</h1>
         <p class="text-gray-600 mb-2">
-            Merci pour votre inscription a PointagePro.
+            Merci pour votre inscription a SB Pointage.
         </p>
         <p class="text-gray-600 mb-6">
             Un email contenant vos identifiants de connexion a ete envoye a votre adresse email. Veuillez verifier votre boite de reception.

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Espace Client') - PointagePro</title>
+    <title>@yield('title', 'Espace Client') - SB Pointage</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>[x-cloak] { display: none !important; }</style>
@@ -22,7 +22,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
-                <span class="font-bold text-lg">PointagePro</span>
+                <span class="font-bold text-lg">SB Pointage</span>
             </a>
         </div>
         <nav class="flex-1 p-4 space-y-1 overflow-y-auto">

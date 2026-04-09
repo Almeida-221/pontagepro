@@ -109,7 +109,8 @@ class RegistrationController extends Controller
             return redirect()->route('register.plans');
         }
         $plan = Plan::findOrFail(session('registration.plan_id'));
-        return view('register.payment', compact('plan'));
+        $paymentSettings = \App\Models\SiteSetting::all_settings();
+        return view('register.payment', compact('plan', 'paymentSettings'));
     }
 
     public function processPayment(Request $request)
@@ -120,9 +121,14 @@ class RegistrationController extends Controller
 
         $plan = Plan::findOrFail(session('registration.plan_id'));
 
+        $allMethods = ['orange_money', 'wave', 'visa', 'bank'];
+        $settings   = \App\Models\SiteSetting::all_settings();
+        $enabled    = array_filter($allMethods, fn($m) => !empty($settings['payment_' . $m]));
+        $allowed    = !empty($enabled) ? implode(',', $enabled) : implode(',', $allMethods);
+
         $rules = [
             'payment_method' => $plan->price > 0
-                ? ['required', 'in:orange_money,wave,visa,bank']
+                ? ['required', "in:$allowed"]
                 : ['nullable'],
         ];
 

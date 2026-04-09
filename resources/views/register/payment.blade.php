@@ -63,6 +63,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-3">Methode de paiement <span class="text-red-500">*</span></label>
                 <div class="grid grid-cols-2 gap-3">
+                    @if(!empty($paymentSettings['payment_orange_money']))
                     <label class="relative cursor-pointer" @click="paymentMethod = 'orange_money'">
                         <input type="radio" name="payment_method" value="orange_money" class="sr-only" required>
                         <div class="border-2 rounded-xl p-4 text-center transition"
@@ -72,10 +73,8 @@
                                 <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
                                     <rect width="60" height="60" rx="12" fill="#FF6600"/>
                                     <g fill="none" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <!-- arrow top-right -->
                                         <line x1="18" y1="42" x2="42" y2="18"/>
                                         <polyline points="28,18 42,18 42,32"/>
-                                        <!-- arrow bottom-left -->
                                         <line x1="42" y1="18" x2="18" y2="42"/>
                                         <polyline points="32,42 18,42 18,28"/>
                                     </g>
@@ -84,7 +83,9 @@
                             <p class="text-sm font-medium text-gray-800">Orange Money</p>
                         </div>
                     </label>
+                    @endif
 
+                    @if(!empty($paymentSettings['payment_wave']))
                     <label class="relative cursor-pointer" @click="paymentMethod = 'wave'">
                         <input type="radio" name="payment_method" value="wave" class="sr-only">
                         <div class="border-2 rounded-xl p-4 text-center transition"
@@ -93,17 +94,12 @@
                             <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
                                 <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
                                     <rect width="60" height="60" rx="12" fill="#1A9BDB"/>
-                                    <!-- Penguin body -->
                                     <ellipse cx="30" cy="36" rx="11" ry="13" fill="white"/>
                                     <ellipse cx="30" cy="37" rx="7" ry="9" fill="#1A9BDB"/>
-                                    <!-- Head -->
                                     <ellipse cx="30" cy="21" rx="10" ry="10" fill="white"/>
-                                    <!-- Eyes -->
                                     <circle cx="26.5" cy="20" r="1.8" fill="#1A9BDB"/>
                                     <circle cx="33.5" cy="20" r="1.8" fill="#1A9BDB"/>
-                                    <!-- Beak -->
                                     <ellipse cx="30" cy="24" rx="2.5" ry="1.5" fill="#F5A623"/>
-                                    <!-- Wings -->
                                     <ellipse cx="18" cy="35" rx="4" ry="7" fill="white" transform="rotate(-15 18 35)"/>
                                     <ellipse cx="42" cy="35" rx="4" ry="7" fill="white" transform="rotate(15 42 35)"/>
                                 </svg>
@@ -111,7 +107,9 @@
                             <p class="text-sm font-medium text-gray-800">Wave</p>
                         </div>
                     </label>
+                    @endif
 
+                    @if(!empty($paymentSettings['payment_visa']))
                     <label class="relative cursor-pointer" @click="paymentMethod = 'visa'">
                         <input type="radio" name="payment_method" value="visa" class="sr-only">
                         <div class="border-2 rounded-xl p-4 text-center transition"
@@ -122,7 +120,9 @@
                             <p class="text-sm font-medium text-gray-800">Carte Visa</p>
                         </div>
                     </label>
+                    @endif
 
+                    @if(!empty($paymentSettings['payment_bank']))
                     <label class="relative cursor-pointer" @click="paymentMethod = 'bank'">
                         <input type="radio" name="payment_method" value="bank" class="sr-only">
                         <div class="border-2 rounded-xl p-4 text-center transition"
@@ -133,6 +133,7 @@
                             <p class="text-sm font-medium text-gray-800">Carte bancaire</p>
                         </div>
                     </label>
+                    @endif
                 </div>
             </div>
 

@@ -37,6 +37,11 @@ class SiteSettingController extends Controller
             SiteSetting::set($key, $request->input($key, ''));
         }
 
+        // Payment method toggles (checkbox → 1 or 0)
+        foreach (['payment_orange_money', 'payment_wave', 'payment_visa', 'payment_bank'] as $key) {
+            SiteSetting::set($key, $request->has($key) ? '1' : '0');
+        }
+
         // Video file upload (MP4)
         if ($request->hasFile('video_file')) {
             $old = SiteSetting::get('video_path');

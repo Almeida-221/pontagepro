@@ -5,7 +5,8 @@
       "Bash(xargs wc:*)",
       "Bash(php -r ':*)",
       "Bash(git commit -m ':*)",
-      "Bash(grep -E \"\\\\.\\(dart\\)$\")"
+      "Bash(grep -E \"\\\\.\\(dart\\)$\")",
+      "Bash(grep -E \"\\\\.\\(php|blade\\\\.php\\)$\")"
     ]
   }
 }
