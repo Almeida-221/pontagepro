@@ -37,22 +37,30 @@
                     placeholder="Courte description affichée sous le titre…">{{ old('description', $video?->description) }}</textarea>
             </div>
 
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Application cible <span class="text-red-500">*</span></label>
+                <select name="app_target"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="both"     {{ old('app_target', $video?->app_target) === 'both'     ? 'selected' : '' }}>Les deux applications</option>
+                    <option value="pointage" {{ old('app_target', $video?->app_target) === 'pointage' ? 'selected' : '' }}>SB Pointage (ouvriers)</option>
+                    <option value="securite" {{ old('app_target', $video?->app_target) === 'securite' ? 'selected' : '' }}>SB Sécurité</option>
+                </select>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Application cible <span class="text-red-500">*</span></label>
-                    <select name="app_target"
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date de publication</label>
+                    <input type="datetime-local" name="published_at"
+                        value="{{ old('published_at', $video?->published_at?->format('Y-m-d\TH:i')) }}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="both"     {{ old('app_target', $video?->app_target) === 'both'     ? 'selected' : '' }}>Les deux applications</option>
-                        <option value="pointage" {{ old('app_target', $video?->app_target) === 'pointage' ? 'selected' : '' }}>SB Pointage (ouvriers)</option>
-                        <option value="securite" {{ old('app_target', $video?->app_target) === 'securite' ? 'selected' : '' }}>SB Sécurité</option>
-                    </select>
+                    <p class="text-xs text-gray-400 mt-1">Laisser vide pour diffuser immédiatement.</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Durée d'affichage (sec) <span class="text-red-500">*</span></label>
-                    <input type="number" name="duration_seconds" min="5" max="300"
-                        value="{{ old('duration_seconds', $video?->duration_seconds ?? 30) }}"
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date d'expiration</label>
+                    <input type="datetime-local" name="expires_at"
+                        value="{{ old('expires_at', $video?->expires_at?->format('Y-m-d\TH:i')) }}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p class="text-xs text-gray-400 mt-1">La vidéo se ferme automatiquement après ce délai si l'utilisateur ne la ferme pas manuellement.</p>
+                    <p class="text-xs text-gray-400 mt-1">Laisser vide pour pas de limite.</p>
                 </div>
             </div>
 
@@ -61,7 +69,7 @@
                     {{ old('is_active', $video?->is_active) ? 'checked' : '' }}
                     class="w-4 h-4 text-blue-600 rounded">
                 <label for="is_active" class="text-sm font-medium text-gray-700">
-                    Publier immédiatement <span class="text-gray-400 font-normal">(la vidéo s'affichera sur les applications dès l'enregistrement)</span>
+                    Activer la vidéo <span class="text-gray-400 font-normal">(la vidéo s'affiche sur les apps selon les dates ci-dessus)</span>
                 </label>
             </div>
         </div>

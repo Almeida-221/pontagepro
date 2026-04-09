@@ -61,10 +61,28 @@
                 @if($video->description)
                     <p class="text-xs text-gray-500 truncate">{{ $video->description }}</p>
                 @endif
-                <div class="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-gray-400">
                     <span>
-                        <svg class="w-3 h-3 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        {{ $video->duration_seconds }}s d'affichage
+                        <svg class="w-3 h-3 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Début :
+                        @if($video->published_at)
+                            <span class="text-gray-600">{{ $video->published_at->format('d/m/Y H:i') }}</span>
+                        @else
+                            <span class="text-green-600">Immédiat</span>
+                        @endif
+                    </span>
+                    <span>
+                        <svg class="w-3 h-3 inline -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Expiration :
+                        @if($video->expires_at)
+                            @if($video->expires_at->isPast())
+                                <span class="text-red-500">Expirée ({{ $video->expires_at->format('d/m/Y H:i') }})</span>
+                            @else
+                                <span class="text-gray-600">{{ $video->expires_at->format('d/m/Y H:i') }}</span>
+                            @endif
+                        @else
+                            <span>Aucune limite</span>
+                        @endif
                     </span>
                     @if($video->video_url)
                         <span class="text-blue-500">Lien externe</span>

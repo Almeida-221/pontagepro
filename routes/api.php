@@ -25,6 +25,9 @@ Route::post('/auth/login', [MobileAuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
+    // Vidéos publicitaires (app pointage ouvriers)
+    Route::get('/ad-videos', [AdVideoApiController::class, 'index']);
+
     Route::post('/auth/logout', [MobileAuthController::class, 'logout']);
     Route::get('/auth/me', [MobileAuthController::class, 'me']);
     Route::post('/auth/change-pin', [MobileAuthController::class, 'changePin']);

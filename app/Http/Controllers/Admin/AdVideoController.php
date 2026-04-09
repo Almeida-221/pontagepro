@@ -23,17 +23,20 @@ class AdVideoController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title'            => 'required|string|max:150',
-            'description'      => 'nullable|string|max:1000',
-            'app_target'       => 'required|in:pointage,securite,both',
-            'video_url'        => 'nullable|url|max:500',
-            'video_file'       => 'nullable|mimes:mp4,mov,webm|max:204800',
-            'thumbnail'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'duration_seconds' => 'required|integer|min:5|max:300',
-            'is_active'        => 'nullable|boolean',
+            'title'        => 'required|string|max:150',
+            'description'  => 'nullable|string|max:1000',
+            'app_target'   => 'required|in:pointage,securite,both',
+            'video_url'    => 'nullable|url|max:500',
+            'video_file'   => 'nullable|mimes:mp4,mov,webm|max:204800',
+            'thumbnail'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'is_active'    => 'nullable|boolean',
+            'published_at' => 'nullable|date',
+            'expires_at'   => 'nullable|date|after_or_equal:published_at',
         ]);
 
-        $data['is_active'] = $request->boolean('is_active');
+        $data['is_active']    = $request->boolean('is_active');
+        $data['published_at'] = $request->filled('published_at') ? $request->input('published_at') : null;
+        $data['expires_at']   = $request->filled('expires_at')   ? $request->input('expires_at')   : null;
 
         if ($request->hasFile('video_file')) {
             $data['video_path'] = $request->file('video_file')->store('ad_videos', 'public');
@@ -57,17 +60,20 @@ class AdVideoController extends Controller
     public function update(Request $request, AdVideo $adVideo)
     {
         $data = $request->validate([
-            'title'            => 'required|string|max:150',
-            'description'      => 'nullable|string|max:1000',
-            'app_target'       => 'required|in:pointage,securite,both',
-            'video_url'        => 'nullable|url|max:500',
-            'video_file'       => 'nullable|mimes:mp4,mov,webm|max:204800',
-            'thumbnail'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'duration_seconds' => 'required|integer|min:5|max:300',
-            'is_active'        => 'nullable|boolean',
+            'title'        => 'required|string|max:150',
+            'description'  => 'nullable|string|max:1000',
+            'app_target'   => 'required|in:pointage,securite,both',
+            'video_url'    => 'nullable|url|max:500',
+            'video_file'   => 'nullable|mimes:mp4,mov,webm|max:204800',
+            'thumbnail'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'is_active'    => 'nullable|boolean',
+            'published_at' => 'nullable|date',
+            'expires_at'   => 'nullable|date|after_or_equal:published_at',
         ]);
 
-        $data['is_active'] = $request->boolean('is_active');
+        $data['is_active']    = $request->boolean('is_active');
+        $data['published_at'] = $request->filled('published_at') ? $request->input('published_at') : null;
+        $data['expires_at']   = $request->filled('expires_at')   ? $request->input('expires_at')   : null;
 
         if ($request->hasFile('video_file')) {
             if ($adVideo->video_path) Storage::disk('public')->delete($adVideo->video_path);

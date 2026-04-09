@@ -11,11 +11,14 @@ class AdVideo extends Model
         'title', 'description', 'app_target',
         'video_url', 'video_path', 'thumbnail_path',
         'duration_seconds', 'is_active',
+        'published_at', 'expires_at',
     ];
 
     protected $casts = [
         'is_active'        => 'boolean',
         'duration_seconds' => 'integer',
+        'published_at'     => 'datetime',
+        'expires_at'       => 'datetime',
     ];
 
     /** URL publique du fichier vidéo (si uploadé). */
@@ -34,12 +37,17 @@ class AdVideo extends Model
             : null;
     }
 
-    /** Scope : vidéos actives pour une cible donnée. */
+    /** Scope : vidéos actives pour une cible donnée, dans la fenêtre de diffusion. */
     public function scopeActiveFor($query, string $target)
     {
+        $now = now();
         return $query->where('is_active', true)
                      ->where(fn ($q) => $q->where('app_target', $target)
-                                          ->orWhere('app_target', 'both'));
+                                          ->orWhere('app_target', 'both'))
+                     ->where(fn ($q) => $q->whereNull('published_at')
+                                          ->orWhere('published_at', '<=', $now))
+                     ->where(fn ($q) => $q->whereNull('expires_at')
+                                          ->orWhere('expires_at', '>', $now));
     }
 
     /** Tableau retourné à l'API mobile. */
