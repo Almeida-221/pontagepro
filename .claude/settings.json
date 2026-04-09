@@ -4,7 +4,8 @@
       "Bash(grep -i \"setting\\\\|logo\\\\|site\" database/migrations/*.php)",
       "Bash(xargs wc:*)",
       "Bash(php -r ':*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(grep -E \"\\\\.\\(dart\\)$\")"
     ]
   }
 }

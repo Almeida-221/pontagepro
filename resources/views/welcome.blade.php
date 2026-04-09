@@ -88,7 +88,7 @@
             </div>
 
             {{-- Right: phone scanning illustration --}}
-            <div class="hidden lg:flex justify-center items-end relative h-[480px]">
+            <div class="hidden lg:flex justify-center items-end relative h-[520px] self-end pb-0">
 
                 {{-- Glow blob --}}
                 <div class="absolute inset-0 flex items-center justify-center">
@@ -171,7 +171,7 @@
                 </div>
 
                 {{-- Phone 2 — smaller phone being scanned (tilted right, in front) --}}
-                <div class="absolute right-6 bottom-16 z-30" style="transform: rotate(10deg); transform-origin: bottom center;">
+                <div class="absolute right-6 bottom-4 z-30" style="transform: rotate(10deg); transform-origin: bottom center;">
                     <div class="w-36 bg-gray-800 rounded-[1.6rem] p-2 shadow-2xl border-2 border-gray-700">
                         <div class="bg-white rounded-[1.2rem] overflow-hidden">
                             <div class="bg-indigo-700 px-3 pt-4 pb-2 text-center">
@@ -217,7 +217,7 @@
                 </div>
 
                 {{-- Flash / scan success badge --}}
-                <div class="absolute top-16 right-2 z-40 bg-green-400 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
+                <div class="absolute top-24 right-2 z-40 bg-green-400 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                     Présence enregistrée
                 </div>
