@@ -94,11 +94,77 @@ class ClientController extends Controller
         $company = $this->activeCompany();
         $plan    = Plan::findOrFail($request->plan_id);
 
+        // Plan gratuit : activation immédiate sans paiement
+        if ($plan->price == 0) {
+            $current = $company->active_subscription;
+            if ($current) {
+                $current->update(['status' => 'cancelled']);
+            }
+
+            $subscription = Subscription::create([
+                'company_id' => $company->id,
+                'plan_id'    => $plan->id,
+                'start_date' => now(),
+                'end_date'   => now()->addMonth(),
+                'status'     => 'active',
+            ]);
+
+            \App\Models\Invoice::create([
+                'company_id'      => $company->id,
+                'subscription_id' => $subscription->id,
+                'invoice_number'  => \App\Models\Invoice::generateInvoiceNumber(),
+                'amount'          => 0,
+                'status'          => 'paid',
+                'paid_at'         => now(),
+            ]);
+
+            return redirect()->route('client.subscription')
+                ->with('success', 'Votre plan gratuit a été activé avec succès.');
+        }
+
+        // Plan payant : stocker le choix en session et rediriger vers le paiement
+        session(['pending_plan_id' => $plan->id]);
+
+        return redirect()->route('client.plan-payment');
+    }
+
+    public function showPlanPayment()
+    {
+        $planId = session('pending_plan_id');
+        if (!$planId) {
+            return redirect()->route('client.change-plan');
+        }
+
+        $company = $this->activeCompany();
+        $plan    = Plan::findOrFail($planId);
+
+        // Récupérer les moyens de paiement configurés
+        $settings = \App\Models\SiteSetting::first();
+
+        return view('client.plan-payment', compact('company', 'plan', 'settings'));
+    }
+
+    public function processPlanPayment(Request $request)
+    {
+        $planId = session('pending_plan_id');
+        if (!$planId) {
+            return redirect()->route('client.change-plan');
+        }
+
+        $request->validate([
+            'payment_method' => ['required', 'string', 'in:visa,orange_money,wave,bank'],
+        ]);
+
+        $company = $this->activeCompany();
+        $plan    = Plan::findOrFail($planId);
+
+        // Annuler l'abonnement actuel
         $current = $company->active_subscription;
         if ($current) {
             $current->update(['status' => 'cancelled']);
         }
 
+        // Créer le nouvel abonnement et la facture payée
         $subscription = Subscription::create([
             'company_id' => $company->id,
             'plan_id'    => $plan->id,
@@ -112,12 +178,20 @@ class ClientController extends Controller
             'subscription_id' => $subscription->id,
             'invoice_number'  => \App\Models\Invoice::generateInvoiceNumber(),
             'amount'          => $plan->price,
-            'status'          => ($plan->price == 0) ? 'paid' : 'pending',
-            'paid_at'         => ($plan->price == 0) ? now() : null,
+            'status'          => 'paid',
+            'payment_method'  => $request->payment_method,
+            'paid_at'         => now(),
         ]);
 
+        // Réactiver l'entreprise si elle était bloquée
+        if (!$company->isActive()) {
+            $company->update(['status' => 'active']);
+        }
+
+        session()->forget('pending_plan_id');
+
         return redirect()->route('client.subscription')
-            ->with('success', 'Votre plan a été mis à jour avec succès.');
+            ->with('success', 'Paiement validé ! Votre abonnement est maintenant actif.');
     }
 
     // ── Profil ────────────────────────────────────────────────────────────────

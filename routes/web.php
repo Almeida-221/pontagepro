@@ -49,6 +49,8 @@ Route::prefix('espace-client')->name('client.')->middleware(['auth', 'client'])-
     Route::get('/abonnement', [ClientController::class, 'subscription'])->name('subscription');
     Route::get('/changer-plan', [ClientController::class, 'changePlan'])->name('change-plan');
     Route::post('/changer-plan', [ClientController::class, 'updatePlan'])->name('change-plan.update');
+    Route::get('/paiement-plan', [ClientController::class, 'showPlanPayment'])->name('plan-payment');
+    Route::post('/paiement-plan', [ClientController::class, 'processPlanPayment'])->name('plan-payment.process');
     Route::get('/profil', [ClientController::class, 'profile'])->name('profile');
     Route::post('/profil', [ClientController::class, 'updateProfile'])->name('profile.update');
     Route::post('/changer-entreprise/{company}', [ClientController::class, 'switchCompany'])->name('switch-company');

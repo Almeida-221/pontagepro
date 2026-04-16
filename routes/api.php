@@ -32,41 +32,45 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [MobileAuthController::class, 'me']);
     Route::post('/auth/change-pin', [MobileAuthController::class, 'changePin']);
 
-    // Company users (managers & workers)
-    Route::get('/company/users', [CompanyUserController::class, 'index']);
-    Route::post('/company/users', [CompanyUserController::class, 'store']);
-    Route::put('/company/users/{user}', [CompanyUserController::class, 'update']);
-    Route::post('/company/users/{user}/toggle', [CompanyUserController::class, 'toggleActive']);
-    Route::delete('/company/users/{user}', [CompanyUserController::class, 'destroy']);
+    // Routes protégées par abonnement actif
+    Route::middleware('subscription')->group(function () {
 
-    // Attendance
-    Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
-    Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
-    Route::get('/attendance/today', [AttendanceController::class, 'today']);
-    Route::get('/attendance/my', [AttendanceController::class, 'my']);
-    Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy']);
+        // Company users (managers & workers)
+        Route::get('/company/users', [CompanyUserController::class, 'index']);
+        Route::post('/company/users', [CompanyUserController::class, 'store']);
+        Route::put('/company/users/{user}', [CompanyUserController::class, 'update']);
+        Route::post('/company/users/{user}/toggle', [CompanyUserController::class, 'toggleActive']);
+        Route::delete('/company/users/{user}', [CompanyUserController::class, 'destroy']);
 
-    // Payments (salary)
-    Route::get('/payments',  [\App\Http\Controllers\Api\PaymentController::class, 'index']);
-    Route::post('/payments', [\App\Http\Controllers\Api\PaymentController::class, 'store']);
+        // Attendance
+        Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
+        Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+        Route::get('/attendance/today', [AttendanceController::class, 'today']);
+        Route::get('/attendance/my', [AttendanceController::class, 'my']);
+        Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy']);
 
-    // Transferts entre ouvriers
-    Route::get('/transfers/lookup',  [\App\Http\Controllers\Api\TransferController::class, 'lookup']);
-    Route::post('/transfers',        [\App\Http\Controllers\Api\TransferController::class, 'store']);
-    Route::post('/transfers/receive',[\App\Http\Controllers\Api\TransferController::class, 'receive']);
+        // Payments (salary)
+        Route::get('/payments',  [\App\Http\Controllers\Api\PaymentController::class, 'index']);
+        Route::post('/payments', [\App\Http\Controllers\Api\PaymentController::class, 'store']);
 
-    // Notifications ouvrier/gérant
-    Route::get('/notifications',                          [\App\Http\Controllers\Api\Security\SecNotificationController::class, 'index']);
-    Route::post('/notifications/{notification}/lu',       [\App\Http\Controllers\Api\Security\SecNotificationController::class, 'markRead']);
-    Route::post('/notifications/tout-lire',               [\App\Http\Controllers\Api\Security\SecNotificationController::class, 'markAllRead']);
+        // Transferts entre ouvriers
+        Route::get('/transfers/lookup',  [\App\Http\Controllers\Api\TransferController::class, 'lookup']);
+        Route::post('/transfers',        [\App\Http\Controllers\Api\TransferController::class, 'store']);
+        Route::post('/transfers/receive',[\App\Http\Controllers\Api\TransferController::class, 'receive']);
 
-    // Professions & categories
-    Route::get('/professions', [ProfessionController::class, 'index']);
-    Route::post('/professions', [ProfessionController::class, 'storeProfession']);
-    Route::delete('/professions/{profession}', [ProfessionController::class, 'destroyProfession']);
-    Route::post('/professions/{profession}/categories', [ProfessionController::class, 'storeCategory']);
-    Route::put('/professions/{profession}/categories/{category}', [ProfessionController::class, 'updateCategory']);
-    Route::delete('/professions/{profession}/categories/{category}', [ProfessionController::class, 'destroyCategory']);
+        // Notifications ouvrier/gérant
+        Route::get('/notifications',                          [\App\Http\Controllers\Api\Security\SecNotificationController::class, 'index']);
+        Route::post('/notifications/{notification}/lu',       [\App\Http\Controllers\Api\Security\SecNotificationController::class, 'markRead']);
+        Route::post('/notifications/tout-lire',               [\App\Http\Controllers\Api\Security\SecNotificationController::class, 'markAllRead']);
+
+        // Professions & categories
+        Route::get('/professions', [ProfessionController::class, 'index']);
+        Route::post('/professions', [ProfessionController::class, 'storeProfession']);
+        Route::delete('/professions/{profession}', [ProfessionController::class, 'destroyProfession']);
+        Route::post('/professions/{profession}/categories', [ProfessionController::class, 'storeCategory']);
+        Route::put('/professions/{profession}/categories/{category}', [ProfessionController::class, 'updateCategory']);
+        Route::delete('/professions/{profession}/categories/{category}', [ProfessionController::class, 'destroyCategory']);
+    });
 });
 
 // ═══════════════════════════════════════════════════════════════
