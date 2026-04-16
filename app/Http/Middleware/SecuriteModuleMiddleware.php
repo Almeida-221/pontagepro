@@ -32,13 +32,26 @@ class SecuriteModuleMiddleware
             return response()->json(['message' => 'Entreprise inactive ou introuvable.'], 403);
         }
 
-        // Check the company has an active securite-privee subscription
+        // Check the company has an active non-expired securite-privee subscription
         $hasModule = $company->active_subscription
             ?->plan
             ?->module
             ?->slug === 'securite-privee';
 
         if (!$hasModule) {
+            // Distinguer abonnement expiré vs abonnement inexistant pour ce module
+            $hasExpiredSubscription = $company->subscriptions()
+                ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
+                ->where('end_date', '<', now()->toDateString())
+                ->exists();
+
+            if ($hasExpiredSubscription) {
+                return response()->json([
+                    'message'    => 'Votre abonnement est expiré. Veuillez contacter votre administrateur.',
+                    'error_code' => 'subscription_expired',
+                ], 403);
+            }
+
             return response()->json(['message' => 'Votre abonnement ne comprend pas le module Sécurité Privée.'], 403);
         }
 

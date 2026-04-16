@@ -15,11 +15,25 @@ class SecAuthController extends Controller
     {
         $request->validate(['phone' => 'required|string']);
 
-        $users = User::where('phone', $request->phone)
+        $baseQuery = User::where('phone', $request->phone)
             ->whereIn('role', self::ROLES)
             ->where('is_active', true)
             ->whereHas('company.subscriptions', fn($q) =>
+                $q->whereHas('plan.module', fn($m) =>
+                    $m->where('slug', 'securite-privee')
+                )
+            );
+
+        // Vérifier d'abord si le compte existe (peu importe l'état de l'abonnement)
+        if (!$baseQuery->exists()) {
+            return response()->json(['message' => 'Ce numéro n\'est associé à aucun compte SB Sécurité.'], 404);
+        }
+
+        // Vérifier s'il a un abonnement actif non expiré
+        $users = (clone $baseQuery)
+            ->whereHas('company.subscriptions', fn($q) =>
                 $q->where('status', 'active')
+                  ->where('end_date', '>=', now()->toDateString())
                   ->whereHas('plan.module', fn($m) =>
                       $m->where('slug', 'securite-privee')
                   )
@@ -28,7 +42,10 @@ class SecAuthController extends Controller
             ->get(['id', 'name', 'phone', 'role', 'company_id', 'pin_code']);
 
         if ($users->isEmpty()) {
-            return response()->json(['message' => 'Ce numéro n\'est associé à aucun compte SB Sécurité.'], 404);
+            return response()->json([
+                'message' => 'Votre abonnement est expiré. Veuillez contacter votre administrateur.',
+                'error_code' => 'subscription_expired',
+            ], 403);
         }
 
         $accounts = $users->map(fn($u) => [
@@ -102,6 +119,20 @@ class SecAuthController extends Controller
 
         if (!$user->pin_code || !Hash::check($request->pin, $user->pin_code)) {
             return response()->json(['message' => 'PIN incorrect.'], 401);
+        }
+
+        // Vérifier que l'abonnement securite-privee est actif et non expiré
+        $hasActiveSubscription = $user->company?->subscriptions()
+            ->where('status', 'active')
+            ->where('end_date', '>=', now()->toDateString())
+            ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
+            ->exists();
+
+        if (!$hasActiveSubscription) {
+            return response()->json([
+                'message'    => 'Votre abonnement est expiré. Veuillez contacter votre administrateur.',
+                'error_code' => 'subscription_expired',
+            ], 403);
         }
 
         $user->tokens()->delete();
