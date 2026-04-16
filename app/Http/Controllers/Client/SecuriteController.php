@@ -30,8 +30,19 @@ class SecuriteController extends Controller
     private function company()
     {
         $company = $this->activeCompany();
-        abort_unless($company->module?->slug === 'securite-privee', 403,
-            'Cette entreprise n\'a pas le module Sécurité Privée.');
+
+        if ($company->module?->slug !== 'securite-privee') {
+            $message = $company->subscriptions()
+                ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
+                ->exists()
+                ? 'Votre abonnement Sécurité Privée est expiré. Veuillez renouveler votre abonnement pour accéder à ce module.'
+                : 'Cette entreprise ne possède pas le module Sécurité Privée.';
+
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                redirect()->route('client.subscription')->with('error', $message)
+            );
+        }
+
         return $company;
     }
 

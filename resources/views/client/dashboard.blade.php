@@ -13,22 +13,35 @@
         <div class="flex flex-wrap gap-2">
             @foreach($allCompanies as $co)
             @php
-                $mod   = $co->active_subscription?->plan?->module;
-                $icons = ['pointage-ouvriers'=>'🏗️','securite-privee'=>'🛡️','pointage-enseignants'=>'🎓'];
-                $emoji = $mod ? ($icons[$mod->slug] ?? '🏢') : '🏢';
-                $isActive = $co->id === $company->id;
+                $coActiveSub = $co->subscriptions
+                    ->where('status', 'active')
+                    ->where('end_date', '>=', now()->toDateString())
+                    ->sortByDesc('end_date')
+                    ->first();
+                $mod       = $coActiveSub?->plan?->module;
+                $isExpired = !$coActiveSub; // pas d'abonnement actif = expiré ou inexistant
+                $icons     = ['pointage-ouvriers'=>'🏗️','securite-privee'=>'🛡️','pointage-enseignants'=>'🎓'];
+                $emoji     = $mod ? ($icons[$mod->slug] ?? '🏢') : ($co->subscriptions->isNotEmpty() ? '🔒' : '🏢');
+                $isActive  = $co->id === $company->id;
             @endphp
             <form method="POST" action="{{ route('client.switch-company', $co) }}">
                 @csrf
                 <button type="submit"
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition
-                           {{ $isActive
+                           {{ $isActive && !$isExpired
                                ? 'bg-blue-600 text-white border-blue-600'
-                               : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400' }}">
+                               : ($isActive && $isExpired
+                                   ? 'bg-red-50 text-red-700 border-red-300'
+                                   : ($isExpired
+                                       ? 'bg-gray-100 text-gray-400 border-gray-200 opacity-60'
+                                       : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400')) }}">
                     <span>{{ $emoji }}</span>
                     <span>{{ $co->name }}</span>
                     @if($mod)
-                    <span class="text-xs opacity-75">({{ $mod->name }})</span>
+                        <span class="text-xs opacity-75">({{ $mod->name }})</span>
+                    @endif
+                    @if($isExpired)
+                        <span class="text-xs font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-600 ml-1">Expiré</span>
                     @endif
                 </button>
             </form>

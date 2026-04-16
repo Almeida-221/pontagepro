@@ -20,8 +20,19 @@ class OuvrierController extends Controller
     private function company()
     {
         $company = $this->activeCompany();
-        abort_unless($company->module?->slug === 'pointage-ouvriers', 403,
-            'Cette entreprise n\'a pas le module Pointage Ouvriers.');
+
+        if ($company->module?->slug !== 'pointage-ouvriers') {
+            $message = $company->subscriptions()
+                ->whereHas('plan.module', fn($m) => $m->where('slug', 'pointage-ouvriers'))
+                ->exists()
+                ? 'Votre abonnement Pointage Ouvriers est expiré. Veuillez renouveler votre abonnement pour accéder à ce module.'
+                : 'Cette entreprise ne possède pas le module Pointage Ouvriers.';
+
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                redirect()->route('client.subscription')->with('error', $message)
+            );
+        }
+
         return $company;
     }
 

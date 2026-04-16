@@ -72,7 +72,9 @@ class ClientController extends Controller
     public function changePlan()
     {
         $company      = $this->activeCompany();
-        $subscription = $company->active_subscription;
+        // Abonnement actif en priorité; sinon le dernier (même expiré) pour connaître le module
+        $subscription = $company->active_subscription
+            ?? $company->subscriptions()->with('plan.module')->latest()->first();
 
         $moduleId = $subscription?->plan?->module_id;
         $plans = Plan::active()
