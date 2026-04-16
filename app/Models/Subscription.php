@@ -54,6 +54,7 @@ class Subscription extends Model
     {
         return match ($this->status) {
             'active'    => 'Actif',
+            'pending'   => 'En attente de paiement',
             'suspended' => 'Suspendu',
             'expired'   => 'Expiré',
             'cancelled' => 'Annulé',

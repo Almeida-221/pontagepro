@@ -33,7 +33,7 @@ class SiteSettingController extends Controller
         ]);
 
         // Simple text settings
-        foreach (['site_name', 'site_address', 'site_email', 'site_phone', 'whatsapp_number', 'video_url'] as $key) {
+        foreach (['site_name', 'site_address', 'site_email', 'site_phone', 'whatsapp_number', 'video_url', 'bank_holder', 'bank_number', 'bank_name'] as $key) {
             SiteSetting::set($key, $request->input($key, ''));
         }
 

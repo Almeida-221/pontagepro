@@ -174,9 +174,34 @@
                         <div class="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                         </div>
-                        <span class="text-sm font-medium text-gray-800">Carte bancaire</span>
+                        <span class="text-sm font-medium text-gray-800">Carte bancaire / Virement</span>
                     </div>
                 </label>
+            </div>
+
+            {{-- Coordonnées bancaires --}}
+            <div class="mt-5 pt-5 border-t border-gray-100 space-y-4">
+                <p class="text-sm font-medium text-gray-700">Coordonnées bancaires (affichées aux clients pour le virement)</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Titulaire du compte</label>
+                        <input type="text" name="bank_holder" value="{{ $settings['bank_holder'] ?? '' }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ex : SB Pointage SARL">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Numéro de compte / IBAN</label>
+                        <input type="text" name="bank_number" value="{{ $settings['bank_number'] ?? '' }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ex : SN28 0001 0001 1234 5678 9012 34">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Nom de la banque</label>
+                        <input type="text" name="bank_name" value="{{ $settings['bank_name'] ?? '' }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ex : CBAO, SGBS, BHS...">
+                    </div>
+                </div>
             </div>
         </div>
 

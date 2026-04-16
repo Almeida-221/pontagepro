@@ -165,47 +165,86 @@ class ClientController extends Controller
             return redirect()->route('client.change-plan');
         }
 
+        $method = $request->input('payment_method');
+
+        // Validation de base
         $request->validate([
             'payment_method' => ['required', 'string', 'in:visa,orange_money,wave,bank'],
         ]);
 
+        // Validation des champs selon le moyen de paiement
+        $extraRules = match ($method) {
+            'visa' => [
+                'card_holder' => ['required', 'string', 'max:100'],
+                'card_number' => ['required', 'string', 'regex:/^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/'],
+                'card_expiry' => ['required', 'string', 'regex:/^\d{2}\/\d{2}$/'],
+                'card_cvv'    => ['required', 'string', 'regex:/^\d{3,4}$/'],
+            ],
+            'orange_money' => [
+                'om_phone'     => ['required', 'string', 'max:20'],
+                'om_reference' => ['required', 'string', 'max:100'],
+            ],
+            'wave' => [
+                'wave_phone'     => ['required', 'string', 'max:20'],
+                'wave_reference' => ['required', 'string', 'max:100'],
+            ],
+            'bank' => [
+                'bank_reference' => ['required', 'string', 'max:100'],
+            ],
+            default => [],
+        };
+
+        $request->validate($extraRules, [
+            'card_holder.required'    => 'Le nom du titulaire est obligatoire.',
+            'card_number.required'    => 'Le numéro de carte est obligatoire.',
+            'card_number.regex'       => 'Le numéro de carte doit comporter 16 chiffres.',
+            'card_expiry.required'    => 'La date d\'expiration est obligatoire.',
+            'card_expiry.regex'       => 'Le format doit être MM/AA.',
+            'card_cvv.required'       => 'Le code CVV est obligatoire.',
+            'card_cvv.regex'          => 'Le CVV doit comporter 3 ou 4 chiffres.',
+            'om_phone.required'       => 'Le numéro Orange Money est obligatoire.',
+            'om_reference.required'   => 'La référence de transaction Orange Money est obligatoire.',
+            'wave_phone.required'     => 'Le numéro Wave est obligatoire.',
+            'wave_reference.required' => 'La référence de transaction Wave est obligatoire.',
+            'bank_reference.required' => 'La référence du virement bancaire est obligatoire.',
+        ]);
+
+        // Construire la référence de paiement selon le mode
+        $paymentReference = match ($method) {
+            'visa'         => 'Carte: ' . substr(preg_replace('/\s/', '', $request->card_number), -4) . ' | Titulaire: ' . $request->card_holder,
+            'orange_money' => 'OM: ' . $request->om_phone . ' | Réf: ' . $request->om_reference,
+            'wave'         => 'Wave: ' . $request->wave_phone . ' | Réf: ' . $request->wave_reference,
+            'bank'         => 'Virement réf: ' . $request->bank_reference,
+            default        => '',
+        };
+
         $company = $this->activeCompany();
         $plan    = Plan::findOrFail($planId);
 
-        // Annuler l'abonnement actuel
-        $current = $company->active_subscription;
-        if ($current) {
-            $current->update(['status' => 'cancelled']);
-        }
-
-        // Créer le nouvel abonnement et la facture payée
+        // Créer la souscription en attente (pas encore active)
         $subscription = Subscription::create([
             'company_id' => $company->id,
             'plan_id'    => $plan->id,
             'start_date' => now(),
             'end_date'   => now()->addMonth(),
-            'status'     => 'active',
+            'status'     => 'pending',
         ]);
 
+        // Créer la facture en attente de confirmation
         \App\Models\Invoice::create([
-            'company_id'      => $company->id,
-            'subscription_id' => $subscription->id,
-            'invoice_number'  => \App\Models\Invoice::generateInvoiceNumber(),
-            'amount'          => $plan->price,
-            'status'          => 'paid',
-            'payment_method'  => $request->payment_method,
-            'paid_at'         => now(),
+            'company_id'        => $company->id,
+            'subscription_id'   => $subscription->id,
+            'invoice_number'    => \App\Models\Invoice::generateInvoiceNumber(),
+            'amount'            => $plan->price,
+            'status'            => 'pending',
+            'payment_method'    => $method,
+            'payment_reference' => $paymentReference,
         ]);
-
-        // Réactiver l'entreprise si elle était bloquée
-        if (!$company->isActive()) {
-            $company->update(['status' => 'active']);
-        }
 
         session()->forget('pending_plan_id');
 
         return redirect()->route('client.subscription')
-            ->with('success', 'Paiement validé ! Votre abonnement est maintenant actif.');
+            ->with('info', 'Votre demande de paiement a été soumise avec succès. Votre abonnement sera activé après vérification du paiement par notre équipe.');
     }
 
     // ── Profil ────────────────────────────────────────────────────────────────

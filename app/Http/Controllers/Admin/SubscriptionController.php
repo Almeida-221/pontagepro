@@ -32,7 +32,18 @@ class SubscriptionController extends Controller
     public function activate(Subscription $subscription)
     {
         $subscription->update(['status' => 'active']);
-        return back()->with('success', 'Abonnement activé avec succès.');
+
+        // Marquer la facture en attente comme payée
+        $subscription->invoices()
+            ->where('status', 'pending')
+            ->update(['status' => 'paid', 'paid_at' => now()]);
+
+        // Réactiver la company si elle était bloquée
+        if ($subscription->company && !$subscription->company->isActive()) {
+            $subscription->company->update(['status' => 'active']);
+        }
+
+        return back()->with('success', 'Abonnement activé et paiement confirmé.');
     }
 
     public function suspend(Subscription $subscription)
