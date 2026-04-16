@@ -51,9 +51,12 @@
                     ];
                 @endphp
 
+                @php $hasAnyMethod = false; @endphp
+
                 @foreach($methods as $value => $method)
-                @php $active = $settings && $settings->{$method['key']}; @endphp
+                @php $active = !empty($settings[$method['key']]); @endphp
                 @if($active)
+                @php $hasAnyMethod = true; @endphp
                 <label class="flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
                     <input type="radio" name="payment_method" value="{{ $value }}" class="accent-blue-600" required>
                     <span class="text-xl">{{ $method['icon'] }}</span>
@@ -62,8 +65,7 @@
                 @endif
                 @endforeach
 
-                {{-- Fallback si aucun moyen configuré --}}
-                @if(!$settings || (!$settings->payment_visa && !$settings->payment_orange_money && !$settings->payment_wave && !$settings->payment_bank))
+                @if(!$hasAnyMethod)
                 <p class="text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3">
                     Aucun moyen de paiement configuré. Contactez votre administrateur.
                 </p>

@@ -82,7 +82,12 @@ class ClientController extends Controller
             ->orderBy('price')
             ->get();
 
-        return view('client.change-plan', compact('company', 'plans', 'subscription'));
+        // Une entreprise ne peut utiliser le plan gratuit qu'une seule fois
+        $hasUsedFreePlan = $company->subscriptions()
+            ->whereHas('plan', fn($q) => $q->where('price', 0))
+            ->exists();
+
+        return view('client.change-plan', compact('company', 'plans', 'subscription', 'hasUsedFreePlan'));
     }
 
     public function updatePlan(Request $request)
@@ -93,6 +98,17 @@ class ClientController extends Controller
 
         $company = $this->activeCompany();
         $plan    = Plan::findOrFail($request->plan_id);
+
+        // Plan gratuit déjà utilisé : bloquer côté serveur
+        if ($plan->price == 0) {
+            $alreadyUsed = $company->subscriptions()
+                ->whereHas('plan', fn($q) => $q->where('price', 0))
+                ->exists();
+
+            if ($alreadyUsed) {
+                return back()->with('error', 'Le plan gratuit a déjà été utilisé. Veuillez choisir un plan payant.');
+            }
+        }
 
         // Plan gratuit : activation immédiate sans paiement
         if ($plan->price == 0) {
@@ -135,11 +151,9 @@ class ClientController extends Controller
             return redirect()->route('client.change-plan');
         }
 
-        $company = $this->activeCompany();
-        $plan    = Plan::findOrFail($planId);
-
-        // Récupérer les moyens de paiement configurés
-        $settings = \App\Models\SiteSetting::first();
+        $company  = $this->activeCompany();
+        $plan     = Plan::findOrFail($planId);
+        $settings = \App\Models\SiteSetting::all_settings();
 
         return view('client.plan-payment', compact('company', 'plan', 'settings'));
     }
