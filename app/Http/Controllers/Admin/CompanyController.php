@@ -40,6 +40,13 @@ class CompanyController extends Controller
     public function activate(Company $company)
     {
         $company->update(['status' => 'active']);
+
+        // Reactivate subscriptions that were suspended by admin and are not yet expired
+        $company->subscriptions()
+            ->where('status', 'suspended')
+            ->where('end_date', '>=', now()->toDateString())
+            ->update(['status' => 'active']);
+
         return back()->with('success', "L'entreprise {$company->name} a été activée.");
     }
 
