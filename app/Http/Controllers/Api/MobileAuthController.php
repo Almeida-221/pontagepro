@@ -164,7 +164,7 @@ class MobileAuthController extends Controller
         // Étape 4 : vérifier l'abonnement pointage-ouvriers
         $hasActive = $company->subscriptions()
             ->where('status', 'active')
-            ->where('end_date', '>=', now()->toDateString())
+            ->where('end_date', '>', now()->toDateString())
             ->whereHas('plan.module', fn($m) => $m->where('slug', 'pointage-ouvriers'))
             ->exists();
 

@@ -40,7 +40,7 @@ class SecAuthController extends Controller
         $users = $baseUsers->filter(function ($u) {
             return $u->company?->subscriptions()
                 ->where('status', 'active')
-                ->where('end_date', '>=', now()->toDateString())
+                ->where('end_date', '>', now()->toDateString())
                 ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
                 ->exists();
         });
@@ -140,7 +140,7 @@ class SecAuthController extends Controller
         // Vérifier que l'abonnement securite-privee est actif et non expiré
         $hasActiveSubscription = $company?->subscriptions()
             ->where('status', 'active')
-            ->where('end_date', '>=', now()->toDateString())
+            ->where('end_date', '>', now()->toDateString())
             ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
             ->exists();
 

@@ -70,7 +70,7 @@
             @php
                 $coActiveSub = $co->subscriptions
                     ->where('status', 'active')
-                    ->where('end_date', '>=', now()->toDateString())
+                    ->where('end_date', '>', now()->toDateString())
                     ->sortByDesc('end_date')
                     ->first();
                 $mod       = $coActiveSub?->plan?->module;

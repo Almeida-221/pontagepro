@@ -58,7 +58,7 @@ class Company extends Model
     {
         return $this->subscriptions()
             ->where('status', 'active')
-            ->where('end_date', '>=', now()->toDateString())
+            ->where('end_date', '>', now()->toDateString())
             ->latest()
             ->first();
     }
