@@ -6,6 +6,61 @@
 @section('content')
 <div class="space-y-6 mt-2">
 
+    {{-- Bannière : Entreprise suspendue par l'admin --}}
+    @if($company->status === 'suspended')
+    <div class="bg-red-50 border border-red-300 rounded-2xl p-4 flex items-start gap-3">
+        <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+        </div>
+        <div>
+            <p class="font-semibold text-red-800">Votre entreprise a été suspendue</p>
+            <p class="text-sm text-red-600 mt-0.5">Toutes vos activités mobiles sont bloquées. Veuillez contacter l'administrateur pour réactiver votre compte.</p>
+        </div>
+    </div>
+    @elseif($daysLeft !== null && $daysLeft <= 5 && $daysLeft > 0)
+    {{-- Bannière : Abonnement expire bientôt --}}
+    <div class="bg-amber-50 border border-amber-300 rounded-2xl p-4 flex items-center justify-between gap-4">
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-semibold text-amber-800">
+                    Votre abonnement expire dans <span class="text-red-600">{{ $daysLeft }} jour{{ $daysLeft > 1 ? 's' : '' }}</span>
+                </p>
+                <p class="text-sm text-amber-700 mt-0.5">Renouvelez maintenant pour continuer à utiliser vos applications sans interruption.</p>
+            </div>
+        </div>
+        <a href="{{ route('client.change-plan') }}"
+           class="flex-shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">
+            Renouveler
+        </a>
+    </div>
+    @elseif($daysLeft === 0 && $subscription)
+    {{-- Bannière : Abonnement expiré --}}
+    <div class="bg-red-50 border border-red-300 rounded-2xl p-4 flex items-center justify-between gap-4">
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-semibold text-red-800">Votre abonnement a expiré</p>
+                <p class="text-sm text-red-600 mt-0.5">L'accès aux applications mobiles est bloqué. Veuillez renouveler votre abonnement.</p>
+            </div>
+        </div>
+        <a href="{{ route('client.change-plan') }}"
+           class="flex-shrink-0 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">
+            Renouveler
+        </a>
+    </div>
+    @endif
+
     {{-- Switcher multi-entreprises (affiché seulement si plusieurs entreprises) --}}
     @if($allCompanies->count() > 1)
     <div class="bg-white border border-gray-200 rounded-2xl p-4">

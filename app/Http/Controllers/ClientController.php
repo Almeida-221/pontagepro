@@ -46,7 +46,10 @@ class ClientController extends Controller
             $allCompanies = collect([$user->company]);
         }
 
-        return view('client.dashboard', compact('user', 'company', 'subscription', 'invoices', 'allCompanies'));
+        // Jours restants pour la bannière d'alerte
+        $daysLeft = $subscription ? $subscription->days_remaining : null;
+
+        return view('client.dashboard', compact('user', 'company', 'subscription', 'invoices', 'allCompanies', 'daysLeft'));
     }
 
     // ── Factures ──────────────────────────────────────────────────────────────
@@ -71,7 +74,13 @@ class ClientController extends Controller
     // ── Changer de plan ───────────────────────────────────────────────────────
     public function changePlan()
     {
-        $company      = $this->activeCompany();
+        $company = $this->activeCompany();
+
+        if ($company->status === 'suspended') {
+            return redirect()->route('client.dashboard')
+                ->with('error', 'Votre entreprise est suspendue. Vous ne pouvez pas modifier votre abonnement. Contactez l\'administrateur.');
+        }
+
         // Abonnement actif en priorité; sinon le dernier (même expiré) pour connaître le module
         $subscription = $company->active_subscription
             ?? $company->subscriptions()->with('plan.module')->latest()->first();
@@ -97,7 +106,12 @@ class ClientController extends Controller
         ]);
 
         $company = $this->activeCompany();
-        $plan    = Plan::findOrFail($request->plan_id);
+
+        if ($company->status === 'suspended') {
+            return back()->with('error', 'Votre entreprise est suspendue. Contactez l\'administrateur.');
+        }
+
+        $plan = Plan::findOrFail($request->plan_id);
 
         // Plan gratuit déjà utilisé : bloquer côté serveur
         if ($plan->price == 0) {
@@ -151,7 +165,13 @@ class ClientController extends Controller
             return redirect()->route('client.change-plan');
         }
 
-        $company  = $this->activeCompany();
+        $company = $this->activeCompany();
+
+        if ($company->status === 'suspended') {
+            return redirect()->route('client.dashboard')
+                ->with('error', 'Votre entreprise est suspendue. Contactez l\'administrateur.');
+        }
+
         $plan     = Plan::findOrFail($planId);
         $settings = \App\Models\SiteSetting::all_settings();
 
@@ -219,14 +239,31 @@ class ClientController extends Controller
         };
 
         $company = $this->activeCompany();
-        $plan    = Plan::findOrFail($planId);
+
+        if ($company->status === 'suspended') {
+            return redirect()->route('client.dashboard')
+                ->with('error', 'Votre entreprise est suspendue. Contactez l\'administrateur.');
+        }
+
+        $plan = Plan::findOrFail($planId);
+
+        // Calcul des dates : commence le 1er du mois suivant la fin de l'abonnement actuel
+        $currentSub = $company->active_subscription;
+        if ($currentSub && $currentSub->end_date->isFuture()) {
+            // Renouvellement anticipé : démarre le 1er du mois après la fin actuelle
+            $startDate = $currentSub->end_date->copy()->addDay()->startOfMonth();
+        } else {
+            // Aucun abonnement actif ou expiré : démarre le 1er du mois prochain
+            $startDate = now()->addMonthNoOverflow()->startOfMonth();
+        }
+        $endDate = $startDate->copy()->endOfMonth();
 
         // Créer la souscription en attente (pas encore active)
         $subscription = Subscription::create([
             'company_id' => $company->id,
             'plan_id'    => $plan->id,
-            'start_date' => now(),
-            'end_date'   => now()->addMonth(),
+            'start_date' => $startDate,
+            'end_date'   => $endDate,
             'status'     => 'pending',
         ]);
 
