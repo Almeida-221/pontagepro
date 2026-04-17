@@ -18,20 +18,25 @@ class MobileAuthController extends Controller
 
         $phone = $request->input('phone');
 
+        // Chercher sans filtre d'abonnement pour distinguer les cas d'erreur
         $users = User::where('phone', $phone)
             ->whereIn('role', ['company_admin', 'manager', 'worker'])
             ->where('is_active', true)
-            ->whereHas('company.subscriptions', fn($q) =>
-                $q->where('status', 'active')
-                  ->whereHas('plan.module', fn($m) =>
-                      $m->where('slug', 'pointage-ouvriers')
-                  )
-            )
-            ->with('company:id,name')
+            ->whereHas('company')
+            ->with('company:id,name,status')
             ->get(['id', 'name', 'email', 'phone', 'role', 'company_id', 'pin_code']);
 
         if ($users->isEmpty()) {
             return response()->json(['message' => 'Ce numéro n\'est associé à aucun compte.'], 404);
+        }
+
+        // Vérifier si toutes les entreprises sont suspendues
+        $allSuspended = $users->every(fn($u) => $u->company?->status === 'suspended');
+        if ($allSuspended) {
+            return response()->json([
+                'message'    => 'Votre entreprise est suspendue. Veuillez contacter l\'administrateur.',
+                'error_code' => 'company_suspended',
+            ], 403);
         }
 
         $accounts = $users->map(fn($u) => [
@@ -65,22 +70,24 @@ class MobileAuthController extends Controller
         $query = User::where('phone', $phone)
             ->whereIn('role', ['company_admin', 'manager', 'worker'])
             ->where('is_active', true)
-            ->whereNull('pin_code')
-            ->whereHas('company.subscriptions', fn($q) =>
-                $q->where('status', 'active')
-                  ->whereHas('plan.module', fn($m) =>
-                      $m->where('slug', 'pointage-ouvriers')
-                  )
-            );
+            ->whereNull('pin_code');
 
         if ($accountId) {
             $query->where('id', $accountId);
         }
 
-        $user = $query->with('company:id,name')->first();
+        $user = $query->with(['company:id,name,status'])->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Compte introuvable ou PIN déjà configuré'], 404);
+            return response()->json(['message' => 'Compte introuvable ou PIN déjà configuré.'], 404);
+        }
+
+        // Vérifier que l'entreprise n'est pas suspendue avant de créer le PIN
+        if ($user->company?->status === 'suspended') {
+            return response()->json([
+                'message'    => 'Votre entreprise est suspendue. Veuillez contacter l\'administrateur.',
+                'error_code' => 'company_suspended',
+            ], 403);
         }
 
         $user->update(['pin_code' => Hash::make($request->input('pin'))]);
@@ -113,35 +120,68 @@ class MobileAuthController extends Controller
             'pin'   => 'required|string',
         ]);
 
-        $phone      = $request->input('phone');
-        $pin        = $request->input('pin');
-        $accountId  = $request->input('account_id');
+        $phone     = $request->input('phone');
+        $pin       = $request->input('pin');
+        $accountId = $request->input('account_id');
 
+        // Étape 1 : trouver le compte sans filtre d'abonnement
         $query = User::where('phone', $phone)
             ->whereIn('role', ['company_admin', 'manager', 'worker'])
-            ->where('is_active', true)
-            ->whereHas('company.subscriptions', fn($q) =>
-                $q->where('status', 'active')
-                  ->whereHas('plan.module', fn($m) =>
-                      $m->where('slug', 'pointage-ouvriers')
-                  )
-            );
+            ->where('is_active', true);
 
         if ($accountId) {
             $query->where('id', $accountId);
         }
 
-        $user = $query->with('company:id,name')->first();
+        $user = $query->with(['company:id,name,status'])->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Compte introuvable'], 404);
+            return response()->json(['message' => 'Aucun compte associé à ce numéro.'], 404);
         }
 
-        if (!Hash::check($pin, $user->pin_code)) {
-            return response()->json(['message' => 'PIN incorrect'], 401);
+        // Étape 2 : vérifier le PIN (toujours en premier pour ne pas divulguer l'état)
+        if (!$user->pin_code || !Hash::check($pin, $user->pin_code)) {
+            return response()->json(['message' => 'PIN incorrect.'], 401);
         }
 
-        // Revoke old tokens and create new one
+        // Étape 3 : vérifier l'état de l'entreprise
+        $company = $user->company;
+
+        if (!$company) {
+            return response()->json([
+                'message'    => 'Votre compte n\'est pas associé à une entreprise.',
+                'error_code' => 'no_company',
+            ], 403);
+        }
+
+        if ($company->status === 'suspended') {
+            return response()->json([
+                'message'    => 'Votre entreprise est suspendue. Veuillez contacter l\'administrateur.',
+                'error_code' => 'company_suspended',
+            ], 403);
+        }
+
+        // Étape 4 : vérifier l'abonnement pointage-ouvriers
+        $hasActive = $company->subscriptions()
+            ->where('status', 'active')
+            ->where('end_date', '>=', now()->toDateString())
+            ->whereHas('plan.module', fn($m) => $m->where('slug', 'pointage-ouvriers'))
+            ->exists();
+
+        if (!$hasActive) {
+            $hasExpired = $company->subscriptions()
+                ->whereHas('plan.module', fn($m) => $m->where('slug', 'pointage-ouvriers'))
+                ->exists();
+
+            return response()->json([
+                'message'    => $hasExpired
+                    ? 'Votre abonnement est expiré. Veuillez renouveler votre abonnement.'
+                    : 'Votre entreprise n\'a pas d\'abonnement actif pour ce module.',
+                'error_code' => 'subscription_expired',
+            ], 403);
+        }
+
+        // Étape 5 : tout est OK — créer le token
         $user->tokens()->delete();
         $token = $user->createToken('mobile')->plainTextToken;
 

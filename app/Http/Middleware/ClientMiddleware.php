@@ -27,6 +27,9 @@ class ClientMiddleware
                 ->with('error', 'Votre compte n\'est pas associé à une entreprise.');
         }
 
+        // Le propriétaire peut toujours accéder au web pour gérer son abonnement,
+        // même si l'abonnement est expiré ou l'entreprise suspendue.
+        // Le blocage s'applique uniquement aux applications mobiles (via l'API).
         return $next($request);
     }
 }

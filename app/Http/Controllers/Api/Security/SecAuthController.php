@@ -15,38 +15,44 @@ class SecAuthController extends Controller
     {
         $request->validate(['phone' => 'required|string']);
 
-        $baseQuery = User::where('phone', $request->phone)
+        // Chercher sans filtre d'abonnement pour distinguer les cas d'erreur
+        $baseUsers = User::where('phone', $request->phone)
             ->whereIn('role', self::ROLES)
             ->where('is_active', true)
-            ->whereHas('company.subscriptions', fn($q) =>
-                $q->whereHas('plan.module', fn($m) =>
-                    $m->where('slug', 'securite-privee')
-                )
-            );
+            ->whereHas('company')
+            ->with('company:id,name,status')
+            ->get(['id', 'name', 'phone', 'role', 'company_id', 'pin_code']);
 
-        // Vérifier d'abord si le compte existe (peu importe l'état de l'abonnement)
-        if (!$baseQuery->exists()) {
+        if ($baseUsers->isEmpty()) {
             return response()->json(['message' => 'Ce numéro n\'est associé à aucun compte SB Sécurité.'], 404);
         }
 
-        // Vérifier s'il a un abonnement actif non expiré
-        $users = (clone $baseQuery)
-            ->whereHas('company.subscriptions', fn($q) =>
-                $q->where('status', 'active')
-                  ->where('end_date', '>=', now()->toDateString())
-                  ->whereHas('plan.module', fn($m) =>
-                      $m->where('slug', 'securite-privee')
-                  )
-            )
-            ->with('company:id,name')
-            ->get(['id', 'name', 'phone', 'role', 'company_id', 'pin_code']);
+        // Vérifier si l'entreprise est suspendue
+        $allSuspended = $baseUsers->every(fn($u) => $u->company?->status === 'suspended');
+        if ($allSuspended) {
+            return response()->json([
+                'message'    => 'Votre entreprise est suspendue. Veuillez contacter l\'administrateur.',
+                'error_code' => 'company_suspended',
+            ], 403);
+        }
+
+        // Vérifier l'abonnement securite-privee actif
+        $users = $baseUsers->filter(function ($u) {
+            return $u->company?->subscriptions()
+                ->where('status', 'active')
+                ->where('end_date', '>=', now()->toDateString())
+                ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
+                ->exists();
+        });
 
         if ($users->isEmpty()) {
             return response()->json([
-                'message' => 'Votre abonnement est expiré. Veuillez contacter votre administrateur.',
+                'message'    => 'Votre abonnement est expiré. Veuillez contacter votre administrateur.',
                 'error_code' => 'subscription_expired',
             ], 403);
         }
+
+        $users = $users->values();
 
         $accounts = $users->map(fn($u) => [
             'id'           => $u->id,
@@ -121,8 +127,18 @@ class SecAuthController extends Controller
             return response()->json(['message' => 'PIN incorrect.'], 401);
         }
 
+        // Vérifier l'état de l'entreprise
+        $company = $user->company;
+
+        if ($company?->status === 'suspended') {
+            return response()->json([
+                'message'    => 'Votre entreprise est suspendue. Veuillez contacter l\'administrateur.',
+                'error_code' => 'company_suspended',
+            ], 403);
+        }
+
         // Vérifier que l'abonnement securite-privee est actif et non expiré
-        $hasActiveSubscription = $user->company?->subscriptions()
+        $hasActiveSubscription = $company?->subscriptions()
             ->where('status', 'active')
             ->where('end_date', '>=', now()->toDateString())
             ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
