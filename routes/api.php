@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminAdVideoController as AdminAdVideoApiController;
 use App\Http\Controllers\Api\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\AdminCompanyController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
+use App\Http\Controllers\Api\Admin\AdminInvoiceController;
+use App\Http\Controllers\Api\Admin\AdminModuleController;
+use App\Http\Controllers\Api\Admin\AdminPlanController;
+use App\Http\Controllers\Api\Admin\AdminSettingsController;
 use App\Http\Controllers\Api\Admin\AdminSubscriptionController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\CompanyUserController;
@@ -217,7 +222,29 @@ Route::prefix('admin-mobile')->name('admin-mobile.')->group(function () {
         Route::post('/subscriptions/{subscription}/activate', [AdminSubscriptionController::class, 'activate']);
         Route::post('/subscriptions/{subscription}/suspend',  [AdminSubscriptionController::class, 'suspend']);
 
-        // Factures / Paiements en attente
-        Route::get('/invoices', [AdminSubscriptionController::class, 'invoices']);
+        // Factures
+        Route::get('/invoices',                   [AdminInvoiceController::class, 'index']);
+
+        // Plans
+        Route::get('/plans',                      [AdminPlanController::class, 'index']);
+        Route::post('/plans',                     [AdminPlanController::class, 'store']);
+        Route::put('/plans/{plan}',               [AdminPlanController::class, 'update']);
+        Route::delete('/plans/{plan}',            [AdminPlanController::class, 'destroy']);
+        Route::post('/plans/{plan}/toggle',       [AdminPlanController::class, 'toggle']);
+
+        // Modules / Activités
+        Route::get('/modules',                    [AdminModuleController::class, 'index']);
+        Route::post('/modules/{module}/toggle',   [AdminModuleController::class, 'toggle']);
+
+        // Paramètres du site
+        Route::get('/settings',                   [AdminSettingsController::class, 'index']);
+        Route::put('/settings',                   [AdminSettingsController::class, 'update']);
+
+        // Vidéos publicitaires
+        Route::get('/ad-videos',                  [AdminAdVideoApiController::class, 'index']);
+        Route::post('/ad-videos',                 [AdminAdVideoApiController::class, 'store']);
+        Route::put('/ad-videos/{adVideo}',        [AdminAdVideoApiController::class, 'update']);
+        Route::post('/ad-videos/{adVideo}/toggle',[AdminAdVideoApiController::class, 'toggle']);
+        Route::delete('/ad-videos/{adVideo}',     [AdminAdVideoApiController::class, 'destroy']);
     });
 });
