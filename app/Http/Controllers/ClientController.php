@@ -280,6 +280,25 @@ class ClientController extends Controller
 
         session()->forget('pending_plan_id');
 
+        // Notifier le super admin du nouveau paiement soumis
+        $adminTokens = \App\Models\User::where('role', 'super_admin')
+            ->whereNotNull('fcm_token')
+            ->pluck('fcm_token')
+            ->toArray();
+
+        if (!empty($adminTokens)) {
+            \App\Services\FcmService::sendToTokens(
+                $adminTokens,
+                'Nouveau paiement soumis',
+                "{$company->name} a soumis un paiement pour le plan {$plan->name} ({$plan->price} FCFA).",
+                [
+                    'type'       => 'new_payment',
+                    'company_id' => (string) $company->id,
+                    'invoice_id' => (string) \App\Models\Invoice::where('subscription_id', $subscription->id)->latest()->value('id'),
+                ]
+            );
+        }
+
         return redirect()->route('client.subscription')
             ->with('info', 'Votre demande de paiement a été soumise avec succès. Votre abonnement sera activé après vérification du paiement par notre équipe.');
     }

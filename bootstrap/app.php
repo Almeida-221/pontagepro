@@ -4,6 +4,7 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\CheckSubscriptionMiddleware;
 use App\Http\Middleware\ClientMiddleware;
 use App\Http\Middleware\SecuriteModuleMiddleware;
+use App\Http\Middleware\SuperAdminMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'client'       => ClientMiddleware::class,
             'securite'     => SecuriteModuleMiddleware::class,
             'subscription' => CheckSubscriptionMiddleware::class,
+            'super_admin'  => SuperAdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

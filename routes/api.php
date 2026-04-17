@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminAuthController;
+use App\Http\Controllers\Api\Admin\AdminCompanyController;
+use App\Http\Controllers\Api\Admin\AdminDashboardController;
+use App\Http\Controllers\Api\Admin\AdminSubscriptionController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\CompanyUserController;
 use App\Http\Controllers\Api\MobileAuthController;
@@ -178,5 +182,42 @@ Route::prefix('securite')->name('securite.')->group(function () {
         Route::get('/communications',                        [SecCommunicationController::class, 'index']);
         Route::post('/communications',                       [SecCommunicationController::class, 'store']);
         Route::delete('/communications/{communication}',     [SecCommunicationController::class, 'destroy']);
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  SB ADMIN — Application mobile super administrateur
+// ═══════════════════════════════════════════════════════════════
+Route::prefix('admin-mobile')->name('admin-mobile.')->group(function () {
+
+    // Auth public
+    Route::post('/auth/login',      [AdminAuthController::class, 'login']);
+    Route::post('/auth/setup-pin',  [AdminAuthController::class, 'setupPin']);
+
+    // Routes protégées
+    Route::middleware(['auth:sanctum', 'super_admin'])->group(function () {
+
+        // Auth
+        Route::post('/auth/logout',       [AdminAuthController::class, 'logout']);
+        Route::get('/auth/me',            [AdminAuthController::class, 'me']);
+        Route::post('/auth/change-pin',   [AdminAuthController::class, 'changePin']);
+        Route::put('/auth/fcm-token',     [AdminAuthController::class, 'updateFcmToken']);
+
+        // Dashboard
+        Route::get('/dashboard',          [AdminDashboardController::class, 'index']);
+
+        // Entreprises
+        Route::get('/companies',                      [AdminCompanyController::class, 'index']);
+        Route::get('/companies/{company}',            [AdminCompanyController::class, 'show']);
+        Route::post('/companies/{company}/activate',  [AdminCompanyController::class, 'activate']);
+        Route::post('/companies/{company}/suspend',   [AdminCompanyController::class, 'suspend']);
+
+        // Abonnements
+        Route::get('/subscriptions',                        [AdminSubscriptionController::class, 'index']);
+        Route::post('/subscriptions/{subscription}/activate', [AdminSubscriptionController::class, 'activate']);
+        Route::post('/subscriptions/{subscription}/suspend',  [AdminSubscriptionController::class, 'suspend']);
+
+        // Factures / Paiements en attente
+        Route::get('/invoices', [AdminSubscriptionController::class, 'invoices']);
     });
 });

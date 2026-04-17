@@ -42,6 +42,7 @@ class User extends Authenticatable
         'id_photo_front',
         'id_photo_back',
         'taux_journalier',
+        'fcm_token',
     ];
 
     protected $hidden = [
