@@ -37,7 +37,7 @@ class AdminDashboardController extends Controller
             ->count();
 
         // Dernières activités (entreprises récemment inscrites)
-        $recentCompanies = Company::with('subscriptions.plan')
+        $recentCompanies = Company::with(['subscriptions' => fn($q) => $q->with('plan')->latest()])
             ->latest()
             ->take(5)
             ->get()
@@ -45,7 +45,10 @@ class AdminDashboardController extends Controller
                 'id'     => $c->id,
                 'name'   => $c->name,
                 'status' => $c->status,
-                'plan'   => $c->active_subscription?->plan?->name ?? 'Aucun',
+                'plan'   => $c->subscriptions
+                    ->where('status', 'active')
+                    ->where('end_date', '>', now()->toDateString())
+                    ->first()?->plan?->name ?? 'Aucun',
                 'created_at' => $c->created_at->format('d/m/Y'),
             ]);
 

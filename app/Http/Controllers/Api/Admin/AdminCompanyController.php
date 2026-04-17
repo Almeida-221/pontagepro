@@ -10,7 +10,7 @@ class AdminCompanyController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Company::with(['subscriptions' => fn($q) => $q->latest()->take(1), 'subscriptions.plan'])
+        $query = Company::with(['subscriptions' => fn($q) => $q->with('plan')->latest()])
             ->withCount('users');
 
         if ($request->filled('status')) {
@@ -35,7 +35,7 @@ class AdminCompanyController extends Controller
 
     public function show(Company $company)
     {
-        $company->load(['subscriptions.plan', 'invoices' => fn($q) => $q->latest()->take(10)]);
+        $company->load(['subscriptions' => fn($q) => $q->with('plan')->latest(), 'invoices' => fn($q) => $q->latest()->take(10)]);
         return response()->json($this->formatCompany($company, detailed: true));
     }
 
@@ -60,7 +60,11 @@ class AdminCompanyController extends Controller
 
     private function formatCompany(Company $company, bool $detailed = false): array
     {
-        $sub = $company->active_subscription
+        $sub = $company->subscriptions
+            ->where('status', 'active')
+            ->where('end_date', '>', now()->toDateString())
+            ->sortByDesc('end_date')
+            ->first()
             ?? $company->subscriptions->sortByDesc('created_at')->first();
 
         $data = [
