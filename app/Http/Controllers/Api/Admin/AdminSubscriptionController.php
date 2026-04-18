@@ -108,7 +108,7 @@ class AdminSubscriptionController extends Controller
             'company_id'        => $s->company_id,
             'company_name'      => $s->company?->name,
             'plan_name'         => $s->plan?->name,
-            'plan_price'        => $s->plan?->price,
+            'plan_price'        => (float) ($s->plan?->price ?? 0),
             'status'            => $s->status,
             'start_date'        => $s->start_date?->format('d/m/Y'),
             'end_date'          => $s->end_date?->format('d/m/Y'),

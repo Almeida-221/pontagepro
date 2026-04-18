@@ -10,8 +10,7 @@ class AdminCompanyController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Company::with(['subscriptions' => fn($q) => $q->with('plan')->latest()])
-            ->withCount('users');
+        $query = Company::with(['subscriptions' => fn($q) => $q->with('plan')->latest()]);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -86,7 +85,7 @@ class AdminCompanyController extends Controller
             $data['invoices'] = $company->invoices->map(fn($i) => [
                 'id'               => $i->id,
                 'invoice_number'   => $i->invoice_number,
-                'amount'           => $i->amount,
+                'amount'           => (float) $i->amount,
                 'status'           => $i->status,
                 'payment_method'   => $i->payment_method,
                 'payment_reference'=> $i->payment_reference,
