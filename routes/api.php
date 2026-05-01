@@ -218,9 +218,12 @@ Route::prefix('admin-mobile')->name('admin-mobile.')->group(function () {
         Route::post('/companies/{company}/suspend',   [AdminCompanyController::class, 'suspend']);
 
         // Abonnements
-        Route::get('/subscriptions',                        [AdminSubscriptionController::class, 'index']);
-        Route::post('/subscriptions/{subscription}/activate', [AdminSubscriptionController::class, 'activate']);
-        Route::post('/subscriptions/{subscription}/suspend',  [AdminSubscriptionController::class, 'suspend']);
+        Route::get('/subscriptions',                                      [AdminSubscriptionController::class, 'index']);
+        Route::get('/subscriptions/trial-list',                           [AdminSubscriptionController::class, 'trialList']);
+        Route::post('/subscriptions/{subscription}/activate',             [AdminSubscriptionController::class, 'activate']);
+        Route::post('/subscriptions/{subscription}/suspend',              [AdminSubscriptionController::class, 'suspend']);
+        Route::post('/subscriptions/{subscription}/activate-trial',       [AdminSubscriptionController::class, 'activateTrial']);
+        Route::post('/subscriptions/{subscription}/deactivate-trial',     [AdminSubscriptionController::class, 'deactivateTrial']);
 
         // Factures
         Route::get('/invoices',                   [AdminInvoiceController::class, 'index']);

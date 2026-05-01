@@ -138,6 +138,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('abonnements', SubscriptionController::class)->only(['index', 'edit', 'update'])->parameters(['abonnements' => 'subscription']);
     Route::post('abonnements/{subscription}/activer', [SubscriptionController::class, 'activate'])->name('subscriptions.activate');
     Route::post('abonnements/{subscription}/suspendre', [SubscriptionController::class, 'suspend'])->name('subscriptions.suspend');
+    Route::post('abonnements/{subscription}/activer-essai', [SubscriptionController::class, 'activateTrial'])->name('subscriptions.activate-trial');
+    Route::post('abonnements/{subscription}/desactiver-essai', [SubscriptionController::class, 'deactivateTrial'])->name('subscriptions.deactivate-trial');
     Route::resource('factures', InvoiceController::class)->only(['index'])->parameters(['factures' => 'invoice']);
     Route::resource('plans', PlanController::class)->except(['show']);
 

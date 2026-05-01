@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost/sb/public/index.php\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost/sb/public/index.php?_url=/connexion\")",
+      "Bash(curl -s \"http://localhost/sb/public/connexion\")"
+    ]
+  }
+}

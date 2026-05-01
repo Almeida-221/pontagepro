@@ -24,8 +24,12 @@ class SiteSettingController extends Controller
             'site_phone'      => 'nullable|string|max:30',
             'whatsapp_number' => 'nullable|string|max:30',
             'video_url'       => 'nullable|url|max:500',
+            'appstore_url'    => 'nullable|url|max:500',
+            'playstore_url'   => 'nullable|url|max:500',
             'video_file'      => 'nullable|mimes:mp4,mov,avi,webm|max:204800',
             'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:10240',
+            'app_phone1'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'app_phone2'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'slide1'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'slide2'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'slide3'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
@@ -33,7 +37,7 @@ class SiteSettingController extends Controller
         ]);
 
         // Simple text settings
-        foreach (['site_name', 'site_address', 'site_email', 'site_phone', 'whatsapp_number', 'video_url', 'bank_holder', 'bank_number', 'bank_name'] as $key) {
+        foreach (['site_name', 'site_address', 'site_email', 'site_phone', 'whatsapp_number', 'video_url', 'appstore_url', 'playstore_url', 'bank_holder', 'bank_number', 'bank_name'] as $key) {
             SiteSetting::set($key, $request->input($key, ''));
         }
 
@@ -61,6 +65,22 @@ class SiteSettingController extends Controller
             if ($old) Storage::disk('public')->delete($old);
             $path = $request->file('logo')->store('site', 'public');
             SiteSetting::set('logo_path', $path);
+        }
+
+        // Phone screenshot uploads for app download section
+        foreach (['app_phone1', 'app_phone2'] as $field) {
+            $key = $field . '_path';
+            if ($request->hasFile($field)) {
+                $old = SiteSetting::get($key);
+                if ($old) Storage::disk('public')->delete($old);
+                $path = $request->file($field)->store('site', 'public');
+                SiteSetting::set($key, $path);
+            }
+            if ($request->boolean('delete_' . $field)) {
+                $old = SiteSetting::get($key);
+                if ($old) Storage::disk('public')->delete($old);
+                SiteSetting::set($key, '');
+            }
         }
 
         // Slider images

@@ -10,7 +10,7 @@ git commit -m "%MSG%"
 git push origin main
 
 echo === Deploiement serveur...
-ssh tony@180.149.196.39 "cd /var/www/html/sb && git pull origin main && rm -rf bootstrap/cache/*.php storage/framework/cache/data/* storage/framework/views/* && php artisan route:clear && echo OK"
+ssh tony@180.149.196.39 "cd /var/www/html/sb && git pull origin main && php artisan migrate --force && rm -rf bootstrap/cache/*.php storage/framework/cache/data/* storage/framework/views/* && php artisan route:clear && php artisan storage:link 2>/dev/null; echo OK"
 
 echo.
 echo Done !

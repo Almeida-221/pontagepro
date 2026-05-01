@@ -52,6 +52,34 @@ class SubscriptionController extends Controller
         return back()->with('success', 'Abonnement suspendu avec succès.');
     }
 
+    public function activateTrial(Request $request, Subscription $subscription)
+    {
+        $request->validate([
+            'days' => ['required', 'integer', 'min:1', 'max:365'],
+        ]);
+
+        if ($subscription->plan->price != 0) {
+            return back()->with('error', 'Le mode d\'essai ne s\'applique qu\'aux plans gratuits.');
+        }
+
+        $subscription->update([
+            'status'        => 'active',
+            'trial_ends_at' => now()->addDays((int) $request->days)->toDateString(),
+        ]);
+
+        return back()->with('success', "Mode d'essai activé pour {$request->days} jour(s).");
+    }
+
+    public function deactivateTrial(Subscription $subscription)
+    {
+        $subscription->update([
+            'trial_ends_at' => null,
+            'status'        => $subscription->end_date->isPast() ? 'expired' : 'active',
+        ]);
+
+        return back()->with('success', 'Mode d\'essai désactivé.');
+    }
+
     public function edit(Subscription $subscription)
     {
         $subscription->load(['company', 'plan']);

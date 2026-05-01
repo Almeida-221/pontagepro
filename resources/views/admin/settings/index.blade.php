@@ -205,6 +205,55 @@
             </div>
         </div>
 
+        {{-- Applications mobiles --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-1 pb-3 border-b border-gray-100">
+                Applications mobiles
+            </h2>
+            <p class="text-xs text-gray-500 mb-5">Liens de téléchargement affichés sur la page d'accueil. Laissez vide pour afficher le badge sans lien cliquable.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lien App Store (iOS)</label>
+                    <input type="url" name="appstore_url" value="{{ $settings['appstore_url'] ?? '' }}"
+                        placeholder="https://apps.apple.com/..."
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lien Google Play (Android)</label>
+                    <input type="url" name="playstore_url" value="{{ $settings['playstore_url'] ?? '' }}"
+                        placeholder="https://play.google.com/store/apps/..."
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <p class="text-sm font-medium text-gray-700 mb-3">Captures d'écran (affichées à côté des badges)</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                @foreach(['app_phone1' => 'app_phone1_path', 'app_phone2' => 'app_phone2_path'] as $field => $key)
+                @php $current = $settings[$key] ?? ''; @endphp
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <p class="text-sm font-medium text-gray-700 mb-3">Téléphone {{ $loop->iteration }}</p>
+                    @if($current)
+                        <div class="mb-3">
+                            <img src="{{ asset('storage/' . $current) }}" alt="Téléphone {{ $loop->iteration }}"
+                                class="h-32 w-auto rounded-xl border border-gray-200 object-cover">
+                            <label class="flex items-center gap-2 mt-2 text-xs text-red-600 cursor-pointer">
+                                <input type="checkbox" name="delete_{{ $field }}" value="1" class="rounded">
+                                Supprimer cette image
+                            </label>
+                        </div>
+                    @else
+                        <div class="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center mb-3 border-2 border-dashed border-gray-300">
+                            <span class="text-gray-400 text-xs">Aucune image</span>
+                        </div>
+                    @endif
+                    <input type="file" name="{{ $field }}" accept="image/*"
+                        class="block w-full text-xs text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                @endforeach
+            </div>
+        </div>
+
         <div class="flex justify-end">
             <button type="submit"
                 class="bg-blue-600 text-white px-8 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition shadow-sm">

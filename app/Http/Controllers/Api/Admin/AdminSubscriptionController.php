@@ -66,6 +66,51 @@ class AdminSubscriptionController extends Controller
         return response()->json(['message' => 'Abonnement suspendu.']);
     }
 
+    public function trialList(Request $request)
+    {
+        $subscriptions = Subscription::with(['company:id,name', 'plan:id,name,price'])
+            ->whereHas('plan', fn($q) => $q->where('price', 0))
+            ->latest()
+            ->paginate(30);
+
+        return response()->json([
+            'data' => $subscriptions->map(fn($s) => $this->formatSubscription($s)),
+            'meta' => ['total' => $subscriptions->total()],
+        ]);
+    }
+
+    public function activateTrial(Request $request, Subscription $subscription)
+    {
+        $request->validate(['days' => 'required|integer|min:1|max:365']);
+
+        if ($subscription->plan->price != 0) {
+            return response()->json(['message' => 'Le mode essai ne s\'applique qu\'aux plans gratuits.'], 422);
+        }
+
+        $subscription->update([
+            'status'        => 'active',
+            'trial_ends_at' => now()->addDays((int) $request->days)->toDateString(),
+        ]);
+
+        return response()->json([
+            'message'      => "Mode d'essai activé pour {$request->days} jour(s).",
+            'subscription' => $this->formatSubscription($subscription->fresh(['company', 'plan', 'invoices'])),
+        ]);
+    }
+
+    public function deactivateTrial(Subscription $subscription)
+    {
+        $subscription->update([
+            'trial_ends_at' => null,
+            'status'        => $subscription->end_date->isPast() ? 'expired' : 'active',
+        ]);
+
+        return response()->json([
+            'message'      => 'Mode d\'essai désactivé.',
+            'subscription' => $this->formatSubscription($subscription->fresh(['company', 'plan', 'invoices'])),
+        ]);
+    }
+
     public function invoices(Request $request)
     {
         $query = Invoice::with(['company', 'subscription.plan']);
@@ -104,18 +149,22 @@ class AdminSubscriptionController extends Controller
     {
         $invoice = $s->invoices->first();
         return [
-            'id'                => $s->id,
-            'company_id'        => $s->company_id,
-            'company_name'      => $s->company?->name,
-            'plan_name'         => $s->plan?->name,
-            'plan_price'        => (float) ($s->plan?->price ?? 0),
-            'status'            => $s->status,
-            'start_date'        => $s->start_date?->format('d/m/Y'),
-            'end_date'          => $s->end_date?->format('d/m/Y'),
-            'days_left'         => $s->days_remaining,
-            'payment_method'    => $invoice?->payment_method,
-            'payment_reference' => $invoice?->payment_reference,
-            'invoice_status'    => $invoice?->status,
+            'id'                   => $s->id,
+            'company_id'           => $s->company_id,
+            'company_name'         => $s->company?->name,
+            'plan_name'            => $s->plan?->name,
+            'plan_price'           => (float) ($s->plan?->price ?? 0),
+            'status'               => $s->status,
+            'start_date'           => $s->start_date?->format('d/m/Y'),
+            'end_date'             => $s->end_date?->format('d/m/Y'),
+            'days_left'            => $s->days_remaining,
+            'is_expired'           => $s->is_expired,
+            'is_in_trial'          => $s->is_in_trial,
+            'trial_ends_at'        => $s->trial_ends_at?->format('d/m/Y'),
+            'trial_days_remaining' => $s->trial_days_remaining,
+            'payment_method'       => $invoice?->payment_method,
+            'payment_reference'    => $invoice?->payment_reference,
+            'invoice_status'       => $invoice?->status,
         ];
     }
 }
