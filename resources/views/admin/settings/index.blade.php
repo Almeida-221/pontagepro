@@ -210,8 +210,39 @@
             <h2 class="text-base font-semibold text-gray-900 mb-1 pb-3 border-b border-gray-100">
                 Applications mobiles
             </h2>
-            <p class="text-xs text-gray-500 mb-5">Liens de téléchargement affichés sur la page d'accueil. Laissez vide pour afficher le badge sans lien cliquable.</p>
+            <p class="text-xs text-gray-500 mb-5">Fichiers APK et liens store affichés sur la page d'accueil.</p>
 
+            {{-- APK directs --}}
+            <p class="text-sm font-medium text-gray-700 mb-3">Fichiers APK (Android — téléchargement direct)</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                @foreach(['apk_mob' => ['apk_mob_path', 'SB Pointage Bâtiment'], 'apk_securite' => ['apk_securite_path', 'SB Sécurité']] as $field => [$key, $label])
+                @php $current = $settings[$key] ?? ''; @endphp
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <p class="text-sm font-medium text-gray-700 mb-3">{{ $label }}</p>
+                    @if($current)
+                        <div class="flex items-center gap-3 mb-3 p-2 bg-green-50 rounded-lg border border-green-200">
+                            <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="text-xs text-green-700 font-medium">APK uploadé</span>
+                            <a href="{{ asset('storage/' . $current) }}" target="_blank" class="ml-auto text-xs text-blue-600 hover:underline">Tester</a>
+                        </div>
+                        <label class="flex items-center gap-2 text-xs text-red-600 cursor-pointer mb-2">
+                            <input type="checkbox" name="delete_{{ $field }}" value="1" class="rounded">
+                            Supprimer cet APK
+                        </label>
+                    @else
+                        <div class="w-full h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3 border-2 border-dashed border-gray-300">
+                            <span class="text-gray-400 text-xs">Aucun APK</span>
+                        </div>
+                    @endif
+                    <input type="file" name="{{ $field }}" accept=".apk"
+                        class="block w-full text-xs text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="text-xs text-gray-400 mt-1">Fichier .apk — max 200 Mo</p>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- Liens store --}}
+            <p class="text-sm font-medium text-gray-700 mb-3">Liens store (optionnel — pour quand les apps sont publiées)</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Lien App Store (iOS)</label>

@@ -30,6 +30,8 @@ class SiteSettingController extends Controller
             'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:10240',
             'app_phone1'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'app_phone2'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'apk_mob'         => 'nullable|file|max:204800',
+            'apk_securite'    => 'nullable|file|max:204800',
             'slide1'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'slide2'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'slide3'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
@@ -65,6 +67,22 @@ class SiteSettingController extends Controller
             if ($old) Storage::disk('public')->delete($old);
             $path = $request->file('logo')->store('site', 'public');
             SiteSetting::set('logo_path', $path);
+        }
+
+        // APK uploads
+        foreach (['apk_mob', 'apk_securite'] as $field) {
+            $key = $field . '_path';
+            if ($request->hasFile($field)) {
+                $old = SiteSetting::get($key);
+                if ($old) Storage::disk('public')->delete($old);
+                $path = $request->file($field)->storeAs('apk', $field . '.apk', 'public');
+                SiteSetting::set($key, $path);
+            }
+            if ($request->boolean('delete_' . $field)) {
+                $old = SiteSetting::get($key);
+                if ($old) Storage::disk('public')->delete($old);
+                SiteSetting::set($key, '');
+            }
         }
 
         // Phone screenshot uploads for app download section

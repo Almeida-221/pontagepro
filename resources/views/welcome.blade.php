@@ -769,59 +769,100 @@ function switchModule(panelId) {
 </section>
 
 {{-- Section Téléchargez l'application --}}
+@php
+    $apkMob      = $settings['apk_mob_path'] ?? '';
+    $apkSecurite = $settings['apk_securite_path'] ?? '';
+    $phone1      = $settings['app_phone1_path'] ?? '';
+    $phone2      = $settings['app_phone2_path'] ?? '';
+    $appstoreUrl = $settings['appstore_url'] ?? '';
+    $playstoreUrl= $settings['playstore_url'] ?? '';
+@endphp
 <section class="py-16 bg-gray-50">
     <div class="max-w-6xl mx-auto px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row items-center gap-12">
 
-            {{-- Gauche : titre + description + badges --}}
+            {{-- Gauche : titre + description + boutons de téléchargement --}}
             <div class="flex-1 text-center lg:text-left">
                 <h2 class="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
                     Téléchargez<br>l'application
                 </h2>
-                <p class="text-gray-500 text-lg mb-10 leading-relaxed">
-                    Accédez à tous nos services directement depuis votre smartphone. Disponible sur iOS et Android.
+                <p class="text-gray-500 text-lg mb-8 leading-relaxed">
+                    Accédez à tous nos services directement depuis votre smartphone. Disponible sur Android et iOS.
                 </p>
-                <div class="flex flex-col sm:flex-row items-center lg:items-start gap-4">
 
-                    {{-- Badge App Store --}}
-                    @php $appstoreUrl = $settings['appstore_url'] ?? ''; @endphp
-                    <a href="{{ $appstoreUrl ?: '#' }}"
-                       @if(!$appstoreUrl) onclick="return false;" style="cursor:default;" @else target="_blank" rel="noopener" @endif
-                       class="flex items-center gap-3 bg-black text-white px-5 py-3.5 rounded-2xl shadow-md hover:bg-gray-900 transition {{ !$appstoreUrl ? 'opacity-60' : '' }}">
-                        <svg class="w-8 h-8 fill-white flex-shrink-0" viewBox="0 0 24 24">
-                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                        </svg>
-                        <div>
-                            <div class="text-xs opacity-70 leading-none mb-0.5">Disponible sur</div>
-                            <div class="text-xl font-bold leading-none">App Store</div>
-                        </div>
-                    </a>
+                <div class="flex flex-col gap-4">
 
-                    {{-- Badge Google Play --}}
-                    @php $playstoreUrl = $settings['playstore_url'] ?? ''; @endphp
-                    <a href="{{ $playstoreUrl ?: '#' }}"
-                       @if(!$playstoreUrl) onclick="return false;" style="cursor:default;" @else target="_blank" rel="noopener" @endif
-                       class="flex items-center gap-3 bg-black text-white px-5 py-3.5 rounded-2xl shadow-md hover:bg-gray-900 transition {{ !$playstoreUrl ? 'opacity-60' : '' }}">
-                        <svg class="w-9 h-9 flex-shrink-0" viewBox="0 0 24 24">
-                            <path fill="#4CAF50" d="M1.22 0c-.41.23-.68.68-.68 1.22v21.56c0 .54.27.99.68 1.22l.11.07 12.08-12.08v-.29L1.33-.07z"/>
-                            <path fill="#FFC107" d="M17.44 12l-4.03-4.03-12.09 12.1c.49.52 1.28.58 1.95.17L17.44 12z"/>
-                            <path fill="#FF3D00" d="M17.44 12L3.27 3.76c-.67-.41-1.46-.35-1.95.17l12.09 12.1z"/>
-                            <path fill="#FFEB3B" d="M1.33 23.93l.11.07 14.17-8.24-4.03-4.03z"/>
-                        </svg>
-                        <div>
-                            <div class="text-xs opacity-70 leading-none mb-0.5">DISPONIBLE SUR</div>
-                            <div class="text-xl font-bold leading-none">Google Play</div>
+                    {{-- SB Pointage Bâtiment --}}
+                    <div class="flex flex-col sm:flex-row items-center lg:items-start gap-3">
+                        <div class="text-sm font-semibold text-gray-500 w-40 text-left hidden sm:block pt-4">SB Pointage</div>
+                        <div class="flex flex-wrap gap-3">
+                            @if($apkMob)
+                            <a href="{{ asset('storage/' . $apkMob) }}" download
+                               class="flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl shadow hover:bg-blue-700 transition">
+                                <svg class="w-5 h-5 fill-white flex-shrink-0" viewBox="0 0 24 24"><path d="M12 16l-4-4h2.5V4h3v8H16l-4 4zm-7 4v-2h14v2H5z"/></svg>
+                                <div>
+                                    <div class="text-xs opacity-80 leading-none">Télécharger</div>
+                                    <div class="text-sm font-bold leading-tight">Android APK</div>
+                                </div>
+                            </a>
+                            @endif
+                            @if($appstoreUrl)
+                            <a href="{{ $appstoreUrl }}" target="_blank" rel="noopener"
+                               class="flex items-center gap-2 bg-black text-white px-5 py-3 rounded-xl shadow hover:bg-gray-800 transition">
+                                <svg class="w-5 h-5 fill-white flex-shrink-0" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                                <div>
+                                    <div class="text-xs opacity-80 leading-none">Disponible sur</div>
+                                    <div class="text-sm font-bold leading-tight">App Store</div>
+                                </div>
+                            </a>
+                            @endif
+                            @if(!$apkMob && !$appstoreUrl)
+                            <span class="flex items-center gap-2 bg-gray-200 text-gray-500 px-5 py-3 rounded-xl text-sm">SB Pointage — bientôt disponible</span>
+                            @endif
                         </div>
-                    </a>
+                    </div>
+
+                    <div class="border-t border-gray-200 my-1"></div>
+
+                    {{-- SB Sécurité --}}
+                    <div class="flex flex-col sm:flex-row items-center lg:items-start gap-3">
+                        <div class="text-sm font-semibold text-gray-500 w-40 text-left hidden sm:block pt-4">SB Sécurité</div>
+                        <div class="flex flex-wrap gap-3">
+                            @if($apkSecurite)
+                            <a href="{{ asset('storage/' . $apkSecurite) }}" download
+                               class="flex items-center gap-2 bg-red-600 text-white px-5 py-3 rounded-xl shadow hover:bg-red-700 transition">
+                                <svg class="w-5 h-5 fill-white flex-shrink-0" viewBox="0 0 24 24"><path d="M12 16l-4-4h2.5V4h3v8H16l-4 4zm-7 4v-2h14v2H5z"/></svg>
+                                <div>
+                                    <div class="text-xs opacity-80 leading-none">Télécharger</div>
+                                    <div class="text-sm font-bold leading-tight">Android APK</div>
+                                </div>
+                            </a>
+                            @endif
+                            @if($playstoreUrl)
+                            <a href="{{ $playstoreUrl }}" target="_blank" rel="noopener"
+                               class="flex items-center gap-2 bg-black text-white px-5 py-3 rounded-xl shadow hover:bg-gray-800 transition">
+                                <svg class="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24">
+                                    <path fill="#4CAF50" d="M1.22 0c-.41.23-.68.68-.68 1.22v21.56c0 .54.27.99.68 1.22l.11.07 12.08-12.08v-.29L1.33-.07z"/>
+                                    <path fill="#FFC107" d="M17.44 12l-4.03-4.03-12.09 12.1c.49.52 1.28.58 1.95.17L17.44 12z"/>
+                                    <path fill="#FF3D00" d="M17.44 12L3.27 3.76c-.67-.41-1.46-.35-1.95.17l12.09 12.1z"/>
+                                    <path fill="#FFEB3B" d="M1.33 23.93l.11.07 14.17-8.24-4.03-4.03z"/>
+                                </svg>
+                                <div>
+                                    <div class="text-xs opacity-80 leading-none">DISPONIBLE SUR</div>
+                                    <div class="text-sm font-bold leading-tight">Google Play</div>
+                                </div>
+                            </a>
+                            @endif
+                            @if(!$apkSecurite && !$playstoreUrl)
+                            <span class="flex items-center gap-2 bg-gray-200 text-gray-500 px-5 py-3 rounded-xl text-sm">SB Sécurité — bientôt disponible</span>
+                            @endif
+                        </div>
+                    </div>
 
                 </div>
             </div>
 
             {{-- Droite : captures d'écran des apps --}}
-            @php
-                $phone1 = $settings['app_phone1_path'] ?? '';
-                $phone2 = $settings['app_phone2_path'] ?? '';
-            @endphp
             @if($phone1 || $phone2)
             <div class="flex-1 flex justify-center items-end gap-4">
                 @if($phone1)
