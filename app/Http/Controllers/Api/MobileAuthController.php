@@ -233,6 +233,30 @@ class MobileAuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user()->load('company:id,name');
+
+        // Vérifier l'abonnement pointage-ouvriers au lancement de l'app
+        $company = $user->company;
+        if ($company) {
+            $hasActive = $company->subscriptions()
+                ->where('status', 'active')
+                ->where(function ($q) {
+                    $q->where('end_date', '>', now()->toDateString())
+                      ->orWhere(function ($q2) {
+                          $q2->whereNotNull('trial_ends_at')
+                             ->where('trial_ends_at', '>=', now()->toDateString());
+                      });
+                })
+                ->whereHas('plan.module', fn($m) => $m->where('slug', 'pointage-ouvriers'))
+                ->exists();
+
+            if (!$hasActive) {
+                return response()->json([
+                    'message'    => "L'abonnement de votre entreprise est expiré. Veuillez contacter votre administrateur.",
+                    'error_code' => 'subscription_expired',
+                ], 403);
+            }
+        }
+
         return response()->json([
             'id'           => $user->id,
             'name'         => $user->name,
