@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Middleware;
 
@@ -17,13 +17,13 @@ class SecuriteModuleMiddleware
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Non authentifié.'], 401);
+            return response()->json(['message' => 'Non authentifiÃ©.'], 401);
         }
 
         $allowedRoles = ['company_admin', 'gerant_securite', 'agent_securite'];
 
         if (!in_array($user->role, $allowedRoles)) {
-            return response()->json(['message' => 'Accès non autorisé.'], 403);
+            return response()->json(['message' => 'AccÃ¨s non autorisÃ©.'], 403);
         }
 
         $company = $user->company;
@@ -39,7 +39,7 @@ class SecuriteModuleMiddleware
             ?->slug === 'securite-privee';
 
         if (!$hasModule) {
-            // Distinguer abonnement expiré vs abonnement inexistant pour ce module
+            // Distinguer abonnement expirÃ© vs abonnement inexistant pour ce module
             $hasExpiredSubscription = $company->subscriptions()
                 ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
                 ->where('end_date', '<', now()->toDateString())
@@ -51,14 +51,15 @@ class SecuriteModuleMiddleware
 
             if ($hasExpiredSubscription) {
                 return response()->json([
-                    'message'    => 'Votre abonnement est expiré. Veuillez contacter votre administrateur.',
+                    'message'    => "L'abonnement de votre entreprise est expiré. Veuillez contacter votre administrateur.",
                     'error_code' => 'subscription_expired',
                 ], 403);
             }
 
-            return response()->json(['message' => 'Votre abonnement ne comprend pas le module Sécurité Privée.'], 403);
+            return response()->json(['message' => 'Votre abonnement ne comprend pas le module SÃ©curitÃ© PrivÃ©e.'], 403);
         }
 
         return $next($request);
     }
 }
+

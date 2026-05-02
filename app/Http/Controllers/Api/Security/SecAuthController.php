@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Api\Security;
 
@@ -24,10 +24,10 @@ class SecAuthController extends Controller
             ->get(['id', 'name', 'phone', 'role', 'company_id', 'pin_code']);
 
         if ($baseUsers->isEmpty()) {
-            return response()->json(['message' => 'Ce numéro n\'est associé à aucun compte SB Sécurité.'], 404);
+            return response()->json(['message' => 'Ce numÃ©ro n\'est associÃ© Ã  aucun compte SB SÃ©curitÃ©.'], 404);
         }
 
-        // Vérifier si l'entreprise est suspendue
+        // VÃ©rifier si l'entreprise est suspendue
         $allSuspended = $baseUsers->every(fn($u) => $u->company?->status === 'suspended');
         if ($allSuspended) {
             return response()->json([
@@ -36,7 +36,7 @@ class SecAuthController extends Controller
             ], 403);
         }
 
-        // Vérifier l'abonnement securite-privee actif (ou en mode essai)
+        // VÃ©rifier l'abonnement securite-privee actif (ou en mode essai)
         $users = $baseUsers->filter(function ($u) {
             return $u->company?->subscriptions()
                 ->where('status', 'active')
@@ -53,7 +53,7 @@ class SecAuthController extends Controller
 
         if ($users->isEmpty()) {
             return response()->json([
-                'message'    => 'Votre abonnement est expiré. Veuillez contacter votre administrateur.',
+                'message'    => "L'abonnement de votre entreprise est expiré. Veuillez contacter votre administrateur.",
                 'error_code' => 'subscription_expired',
             ], 403);
         }
@@ -94,7 +94,7 @@ class SecAuthController extends Controller
         $user = $query->with('company:id,name')->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Compte introuvable ou PIN déjà configuré.'], 404);
+            return response()->json(['message' => 'Compte introuvable ou PIN dÃ©jÃ  configurÃ©.'], 404);
         }
 
         \DB::table('users')->where('id', $user->id)->update(['pin_code' => Hash::make($request->pin)]);
@@ -133,7 +133,7 @@ class SecAuthController extends Controller
             return response()->json(['message' => 'PIN incorrect.'], 401);
         }
 
-        // Vérifier l'état de l'entreprise
+        // VÃ©rifier l'Ã©tat de l'entreprise
         $company = $user->company;
 
         if ($company?->status === 'suspended') {
@@ -143,7 +143,7 @@ class SecAuthController extends Controller
             ], 403);
         }
 
-        // Vérifier que l'abonnement securite-privee est actif (ou en mode essai)
+        // VÃ©rifier que l'abonnement securite-privee est actif (ou en mode essai)
         $hasActiveSubscription = $company?->subscriptions()
             ->where('status', 'active')
             ->where(function ($q) {
@@ -158,7 +158,7 @@ class SecAuthController extends Controller
 
         if (!$hasActiveSubscription) {
             return response()->json([
-                'message'    => 'Votre abonnement est expiré. Veuillez contacter votre administrateur.',
+                'message'    => "L'abonnement de votre entreprise est expiré. Veuillez contacter votre administrateur.",
                 'error_code' => 'subscription_expired',
             ], 403);
         }
@@ -174,10 +174,10 @@ class SecAuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Le token FCM reste en base — l'agent reçoit les notifications
-        // push même quand l'app est fermée ou qu'il n'est pas connecté.
+        // Le token FCM reste en base â€” l'agent reÃ§oit les notifications
+        // push mÃªme quand l'app est fermÃ©e ou qu'il n'est pas connectÃ©.
         $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Déconnecté avec succès.']);
+        return response()->json(['message' => 'DÃ©connectÃ© avec succÃ¨s.']);
     }
 
     /** Store or update the FCM device token for the authenticated user. */
@@ -189,7 +189,7 @@ class SecAuthController extends Controller
             ->where('id', $request->user()->id)
             ->update(['fcm_token' => $request->fcm_token]);
 
-        return response()->json(['message' => 'Token FCM enregistré.']);
+        return response()->json(['message' => 'Token FCM enregistrÃ©.']);
     }
 
     public function me(Request $request)
@@ -214,7 +214,7 @@ class SecAuthController extends Controller
 
         $user->update(['pin_code' => Hash::make($request->pin)]);
 
-        return response()->json(['message' => 'PIN modifié avec succès.']);
+        return response()->json(['message' => 'PIN modifiÃ© avec succÃ¨s.']);
     }
 
     public function changePhone(Request $request)
@@ -236,13 +236,13 @@ class SecAuthController extends Controller
             ->exists();
 
         if ($exists) {
-            return response()->json(['message' => 'Ce numéro est déjà utilisé.'], 422);
+            return response()->json(['message' => 'Ce numÃ©ro est dÃ©jÃ  utilisÃ©.'], 422);
         }
 
         $user->update(['phone' => $request->phone]);
 
         return response()->json([
-            'message' => 'Numéro modifié avec succès.',
+            'message' => 'NumÃ©ro modifiÃ© avec succÃ¨s.',
             'user'    => $this->formatUser($user->fresh()->load(['company:id,name', 'zone:id,name'])),
         ]);
     }
@@ -266,3 +266,4 @@ class SecAuthController extends Controller
         ];
     }
 }
+

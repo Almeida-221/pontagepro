@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Api;
 
@@ -27,10 +27,10 @@ class MobileAuthController extends Controller
             ->get(['id', 'name', 'email', 'phone', 'role', 'company_id', 'pin_code']);
 
         if ($users->isEmpty()) {
-            return response()->json(['message' => 'Ce numéro n\'est associé à aucun compte.'], 404);
+            return response()->json(['message' => 'Ce numÃ©ro n\'est associÃ© Ã  aucun compte.'], 404);
         }
 
-        // Vérifier si toutes les entreprises sont suspendues
+        // VÃ©rifier si toutes les entreprises sont suspendues
         $allSuspended = $users->every(fn($u) => $u->company?->status === 'suspended');
         if ($allSuspended) {
             return response()->json([
@@ -79,10 +79,10 @@ class MobileAuthController extends Controller
         $user = $query->with(['company:id,name,status'])->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Compte introuvable ou PIN déjà configuré.'], 404);
+            return response()->json(['message' => 'Compte introuvable ou PIN dÃ©jÃ  configurÃ©.'], 404);
         }
 
-        // Vérifier que l'entreprise n'est pas suspendue avant de créer le PIN
+        // VÃ©rifier que l'entreprise n'est pas suspendue avant de crÃ©er le PIN
         if ($user->company?->status === 'suspended') {
             return response()->json([
                 'message'    => 'Votre entreprise est suspendue. Veuillez contacter l\'administrateur.',
@@ -124,7 +124,7 @@ class MobileAuthController extends Controller
         $pin       = $request->input('pin');
         $accountId = $request->input('account_id');
 
-        // Étape 1 : trouver le compte sans filtre d'abonnement
+        // Ã‰tape 1 : trouver le compte sans filtre d'abonnement
         $query = User::where('phone', $phone)
             ->whereIn('role', ['company_admin', 'manager', 'worker'])
             ->where('is_active', true);
@@ -136,20 +136,20 @@ class MobileAuthController extends Controller
         $user = $query->with(['company:id,name,status'])->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Aucun compte associé à ce numéro.'], 404);
+            return response()->json(['message' => 'Aucun compte associÃ© Ã  ce numÃ©ro.'], 404);
         }
 
-        // Étape 2 : vérifier le PIN (toujours en premier pour ne pas divulguer l'état)
+        // Ã‰tape 2 : vÃ©rifier le PIN (toujours en premier pour ne pas divulguer l'Ã©tat)
         if (!$user->pin_code || !Hash::check($pin, $user->pin_code)) {
             return response()->json(['message' => 'PIN incorrect.'], 401);
         }
 
-        // Étape 3 : vérifier l'état de l'entreprise
+        // Ã‰tape 3 : vÃ©rifier l'Ã©tat de l'entreprise
         $company = $user->company;
 
         if (!$company) {
             return response()->json([
-                'message'    => 'Votre compte n\'est pas associé à une entreprise.',
+                'message'    => 'Votre compte n\'est pas associÃ© Ã  une entreprise.',
                 'error_code' => 'no_company',
             ], 403);
         }
@@ -161,7 +161,7 @@ class MobileAuthController extends Controller
             ], 403);
         }
 
-        // Étape 4 : vérifier l'abonnement pointage-ouvriers (ou mode essai)
+        // Ã‰tape 4 : vÃ©rifier l'abonnement pointage-ouvriers (ou mode essai)
         $hasActive = $company->subscriptions()
             ->where('status', 'active')
             ->where(function ($q) {
@@ -181,13 +181,13 @@ class MobileAuthController extends Controller
 
             return response()->json([
                 'message'    => $hasExpired
-                    ? 'Votre abonnement est expiré. Veuillez renouveler votre abonnement.'
-                    : 'Votre entreprise n\'a pas d\'abonnement actif pour ce module.',
+                    ? "L'abonnement de votre entreprise est expiré. Veuillez contacter votre administrateur."
+                    : "Votre entreprise n'a pas d'abonnement actif pour ce module.",
                 'error_code' => 'subscription_expired',
             ], 403);
         }
 
-        // Étape 5 : tout est OK — créer le token
+        // Ã‰tape 5 : tout est OK â€” crÃ©er le token
         $user->tokens()->delete();
         $token = $user->createToken('mobile')->plainTextToken;
 
@@ -221,13 +221,13 @@ class MobileAuthController extends Controller
 
         $user->update(['pin_code' => Hash::make($request->new_pin)]);
 
-        return response()->json(['message' => 'PIN modifié avec succès']);
+        return response()->json(['message' => 'PIN modifiÃ© avec succÃ¨s']);
     }
 
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Déconnecté']);
+        return response()->json(['message' => 'DÃ©connectÃ©']);
     }
 
     public function me(Request $request)
@@ -244,3 +244,4 @@ class MobileAuthController extends Controller
         ]);
     }
 }
+
