@@ -161,10 +161,16 @@ class MobileAuthController extends Controller
             ], 403);
         }
 
-        // Étape 4 : vérifier l'abonnement pointage-ouvriers
+        // Étape 4 : vérifier l'abonnement pointage-ouvriers (ou mode essai)
         $hasActive = $company->subscriptions()
             ->where('status', 'active')
-            ->where('end_date', '>', now()->toDateString())
+            ->where(function ($q) {
+                $q->where('end_date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->whereNotNull('trial_ends_at')
+                         ->where('trial_ends_at', '>=', now()->toDateString());
+                  });
+            })
             ->whereHas('plan.module', fn($m) => $m->where('slug', 'pointage-ouvriers'))
             ->exists();
 

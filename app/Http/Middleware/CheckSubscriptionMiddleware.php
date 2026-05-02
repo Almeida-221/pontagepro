@@ -35,9 +35,13 @@ class CheckSubscriptionMiddleware
             return $next($request);
         }
 
-        // Distinguer expiré vs jamais eu d'abonnement
+        // Distinguer expiré vs jamais eu d'abonnement (exclure les essais actifs)
         $hasExpired = $company->subscriptions()
             ->where('end_date', '<', now()->toDateString())
+            ->where(function ($q) {
+                $q->whereNull('trial_ends_at')
+                  ->orWhere('trial_ends_at', '<', now()->toDateString());
+            })
             ->exists();
 
         if ($hasExpired) {

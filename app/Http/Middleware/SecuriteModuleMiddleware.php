@@ -43,6 +43,10 @@ class SecuriteModuleMiddleware
             $hasExpiredSubscription = $company->subscriptions()
                 ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
                 ->where('end_date', '<', now()->toDateString())
+                ->where(function ($q) {
+                    $q->whereNull('trial_ends_at')
+                      ->orWhere('trial_ends_at', '<', now()->toDateString());
+                })
                 ->exists();
 
             if ($hasExpiredSubscription) {

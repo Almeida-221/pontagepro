@@ -36,11 +36,17 @@ class SecAuthController extends Controller
             ], 403);
         }
 
-        // Vérifier l'abonnement securite-privee actif
+        // Vérifier l'abonnement securite-privee actif (ou en mode essai)
         $users = $baseUsers->filter(function ($u) {
             return $u->company?->subscriptions()
                 ->where('status', 'active')
-                ->where('end_date', '>', now()->toDateString())
+                ->where(function ($q) {
+                    $q->where('end_date', '>', now()->toDateString())
+                      ->orWhere(function ($q2) {
+                          $q2->whereNotNull('trial_ends_at')
+                             ->where('trial_ends_at', '>=', now()->toDateString());
+                      });
+                })
                 ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
                 ->exists();
         });
@@ -137,10 +143,16 @@ class SecAuthController extends Controller
             ], 403);
         }
 
-        // Vérifier que l'abonnement securite-privee est actif et non expiré
+        // Vérifier que l'abonnement securite-privee est actif (ou en mode essai)
         $hasActiveSubscription = $company?->subscriptions()
             ->where('status', 'active')
-            ->where('end_date', '>', now()->toDateString())
+            ->where(function ($q) {
+                $q->where('end_date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->whereNotNull('trial_ends_at')
+                         ->where('trial_ends_at', '>=', now()->toDateString());
+                  });
+            })
             ->whereHas('plan.module', fn($m) => $m->where('slug', 'securite-privee'))
             ->exists();
 
