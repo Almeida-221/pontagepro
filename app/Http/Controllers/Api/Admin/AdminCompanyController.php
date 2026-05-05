@@ -59,9 +59,13 @@ class AdminCompanyController extends Controller
 
     private function formatCompany(Company $company, bool $detailed = false): array
     {
+        // Priorité : abonnement actif (plan valide OU essai en cours)
         $sub = $company->subscriptions
             ->where('status', 'active')
-            ->where('end_date', '>', now()->toDateString())
+            ->filter(fn($s) =>
+                ($s->end_date && $s->end_date->gt(now())) ||
+                ($s->trial_ends_at && $s->trial_ends_at->gte(now()))
+            )
             ->sortByDesc('end_date')
             ->first()
             ?? $company->subscriptions->sortByDesc('created_at')->first();
@@ -72,11 +76,14 @@ class AdminCompanyController extends Controller
             'status'      => $company->status,
             'users_count' => $company->users_count ?? 0,
             'subscription' => $sub ? [
-                'id'         => $sub->id,
-                'plan_name'  => $sub->plan?->name,
-                'status'     => $sub->status,
-                'end_date'   => $sub->end_date?->format('d/m/Y'),
-                'days_left'  => $sub->days_remaining,
+                'id'                   => $sub->id,
+                'plan_name'            => $sub->plan?->name,
+                'status'               => $sub->status,
+                'end_date'             => $sub->end_date?->format('d/m/Y'),
+                'days_left'            => $sub->days_remaining,
+                'is_in_trial'          => $sub->is_in_trial,
+                'trial_ends_at'        => $sub->trial_ends_at?->format('d/m/Y'),
+                'trial_days_remaining' => $sub->trial_days_remaining,
             ] : null,
             'created_at' => $company->created_at->format('d/m/Y'),
         ];

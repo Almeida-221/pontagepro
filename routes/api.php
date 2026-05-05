@@ -139,9 +139,12 @@ Route::prefix('securite')->name('securite.')->group(function () {
         Route::post('/presence/expire-absents',        [SecPresenceController::class, 'expireAbsents']);
 
         // Rapports journaliers
-        Route::get('/rapports',                        [SecRapportController::class, 'index']);
-        Route::post('/rapports/generer',               [SecRapportController::class, 'generer']);
-        Route::post('/rapports/{rapport}/valider',     [SecRapportController::class, 'valider']);
+        Route::get('/rapports',                            [SecRapportController::class, 'index']);
+        Route::post('/rapports/generer',                   [SecRapportController::class, 'generer']);
+        Route::post('/rapports/{rapport}/valider',         [SecRapportController::class, 'valider']);
+        // Rapports avancés
+        Route::get('/rapports/remplacements',              [SecRapportController::class, 'rapportRemplacements']);
+        Route::get('/rapports/pointages-avances',          [SecRapportController::class, 'rapportPointages']);
 
         // Notifications in-app
         Route::get('/notifications',                        [SecNotificationController::class, 'index']);

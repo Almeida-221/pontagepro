@@ -972,6 +972,294 @@ class SecuriteController extends Controller
         return back()->with('success', 'Remplacement supprimé.');
     }
 
+    // ── Rapport Remplacements ──────────────────────────────────────────────────
+    public function rapportRemplacements(Request $request)
+    {
+        $company = $this->company();
+        [$startDate, $endDate, $periodeLabel] = $this->parsePeriodeWeb($request);
+
+        $agentsQuery = User::where('company_id', $company->id)
+            ->where('role', 'agent_securite')
+            ->where('is_active', true)
+            ->with([
+                'zone:id,name',
+                'secAffectationActive.poste:id,name,zone_id',
+                'secAffectationActive.poste.zone:id,name',
+            ])
+            ->orderBy('name');
+
+        if ($request->filled('zone_id')) {
+            $agentsQuery->where('zone_id', $request->zone_id);
+        }
+        if ($request->filled('poste_id')) {
+            $agentsQuery->whereHas('secAffectationActive', fn($q) =>
+                $q->where('poste_id', $request->poste_id)
+            );
+        }
+
+        $agents = $agentsQuery->get();
+        $stats  = [];
+
+        foreach ($agents as $agent) {
+            $aff      = $agent->secAffectationActive;
+            $restDays = $aff ? (array) $aff->rest_days : [];
+            $offDays  = $aff ? (array) $aff->off_days  : [];
+
+            [$workDays, $reposDays] = $this->computeWorkRest($startDate, $endDate, $restDays, $offDays);
+
+            $joursRemplaces = SecRemplacement::where('company_id', $company->id)
+                ->where('statut', 'confirme')
+                ->where(fn($q) =>
+                    $q->where('agent_sortant_id', $agent->id)
+                      ->orWhere('agent_entrant_id', $agent->id)
+                )
+                ->whereBetween('date', [$startDate, $endDate])
+                ->distinct('date')
+                ->count('date');
+
+            $stats[] = [
+                'agent'            => $agent->name,
+                'zone'             => $aff?->poste?->zone?->name ?? $agent->zone?->name ?? '—',
+                'poste'            => $aff?->poste?->name ?? '—',
+                'jours_travailles' => $joursRemplaces,
+                'jours_absents'    => max(0, $workDays - $joursRemplaces),
+                'jours_repos'      => $reposDays,
+                'statut'           => '—',
+            ];
+        }
+
+        $zones  = SecZone::where('company_id', $company->id)->orderBy('name')->get();
+        $postes = SecPoste::where('company_id', $company->id)->orderBy('name')->get();
+
+        return view('client.securite.rapports.remplacements', compact(
+            'company', 'stats', 'zones', 'postes',
+            'startDate', 'endDate', 'periodeLabel'
+        ));
+    }
+
+    public function rapportRemplacementsPdf(Request $request)
+    {
+        $company = $this->company();
+        [$startDate, $endDate, $periodeLabel] = $this->parsePeriodeWeb($request);
+
+        $agentsQuery = User::where('company_id', $company->id)
+            ->where('role', 'agent_securite')
+            ->where('is_active', true)
+            ->with([
+                'zone:id,name',
+                'secAffectationActive.poste:id,name,zone_id',
+                'secAffectationActive.poste.zone:id,name',
+            ])
+            ->orderBy('name');
+
+        if ($request->filled('zone_id')) {
+            $agentsQuery->where('zone_id', $request->zone_id);
+        }
+        if ($request->filled('poste_id')) {
+            $agentsQuery->whereHas('secAffectationActive', fn($q) =>
+                $q->where('poste_id', $request->poste_id)
+            );
+        }
+
+        $agents = $agentsQuery->get();
+        $stats  = [];
+
+        foreach ($agents as $agent) {
+            $aff      = $agent->secAffectationActive;
+            $restDays = $aff ? (array) $aff->rest_days : [];
+            $offDays  = $aff ? (array) $aff->off_days  : [];
+
+            [$workDays, $reposDays] = $this->computeWorkRest($startDate, $endDate, $restDays, $offDays);
+
+            $joursRemplaces = SecRemplacement::where('company_id', $company->id)
+                ->where('statut', 'confirme')
+                ->where(fn($q) =>
+                    $q->where('agent_sortant_id', $agent->id)
+                      ->orWhere('agent_entrant_id', $agent->id)
+                )
+                ->whereBetween('date', [$startDate, $endDate])
+                ->distinct('date')
+                ->count('date');
+
+            $stats[] = [
+                'agent'            => $agent->name,
+                'zone'             => $aff?->poste?->zone?->name ?? $agent->zone?->name ?? '—',
+                'poste'            => $aff?->poste?->name ?? '—',
+                'jours_travailles' => $joursRemplaces,
+                'jours_absents'    => max(0, $workDays - $joursRemplaces),
+                'jours_repos'      => $reposDays,
+                'statut'           => '—',
+            ];
+        }
+
+        return view('client.securite.rapports.pdf_remplacements', compact(
+            'company', 'stats', 'periodeLabel'
+        ));
+    }
+
+    // ── Rapport Pointages (avancé) ─────────────────────────────────────────────
+    public function rapportPointagesAvances(Request $request)
+    {
+        $company = $this->company();
+        [$startDate, $endDate, $periodeLabel] = $this->parsePeriodeWeb($request);
+
+        $agentsQuery = User::where('company_id', $company->id)
+            ->where('role', 'agent_securite')
+            ->where('is_active', true)
+            ->with([
+                'zone:id,name',
+                'secAffectationActive.poste:id,name,zone_id',
+                'secAffectationActive.poste.zone:id,name',
+            ])
+            ->orderBy('name');
+
+        if ($request->filled('zone_id')) {
+            $agentsQuery->where('zone_id', $request->zone_id);
+        }
+        if ($request->filled('poste_id')) {
+            $agentsQuery->whereHas('secAffectationActive', fn($q) =>
+                $q->where('poste_id', $request->poste_id)
+            );
+        }
+
+        $agents = $agentsQuery->get();
+        $stats  = [];
+
+        foreach ($agents as $agent) {
+            $aff      = $agent->secAffectationActive;
+            $restDays = $aff ? (array) $aff->rest_days : [];
+            $offDays  = $aff ? (array) $aff->off_days  : [];
+
+            [$workDays, $reposDays] = $this->computeWorkRest($startDate, $endDate, $restDays, $offDays);
+
+            $joursPresents = \App\Models\SecPointageResponse::where('sec_pointage_responses.agent_id', $agent->id)
+                ->where('sec_pointage_responses.status', 'present')
+                ->join('sec_pointages', 'sec_pointages.id', '=', 'sec_pointage_responses.pointage_id')
+                ->where('sec_pointages.company_id', $company->id)
+                ->whereBetween('sec_pointages.date', [$startDate, $endDate])
+                ->selectRaw('COUNT(DISTINCT DATE(sec_pointages.date)) as cnt')
+                ->value('cnt') ?? 0;
+
+            $stats[] = [
+                'agent'            => $agent->name,
+                'zone'             => $aff?->poste?->zone?->name ?? $agent->zone?->name ?? '—',
+                'poste'            => $aff?->poste?->name ?? '—',
+                'jours_travailles' => (int) $joursPresents,
+                'jours_absents'    => max(0, $workDays - (int) $joursPresents),
+                'jours_repos'      => $reposDays,
+                'statut'           => '—',
+            ];
+        }
+
+        $zones  = SecZone::where('company_id', $company->id)->orderBy('name')->get();
+        $postes = SecPoste::where('company_id', $company->id)->orderBy('name')->get();
+
+        return view('client.securite.rapports.pointages', compact(
+            'company', 'stats', 'zones', 'postes',
+            'startDate', 'endDate', 'periodeLabel'
+        ));
+    }
+
+    public function rapportPointagesPdf(Request $request)
+    {
+        $company = $this->company();
+        [$startDate, $endDate, $periodeLabel] = $this->parsePeriodeWeb($request);
+
+        $agentsQuery = User::where('company_id', $company->id)
+            ->where('role', 'agent_securite')
+            ->where('is_active', true)
+            ->with([
+                'zone:id,name',
+                'secAffectationActive.poste:id,name,zone_id',
+                'secAffectationActive.poste.zone:id,name',
+            ])
+            ->orderBy('name');
+
+        if ($request->filled('zone_id')) {
+            $agentsQuery->where('zone_id', $request->zone_id);
+        }
+
+        $agents = $agentsQuery->get();
+        $stats  = [];
+
+        foreach ($agents as $agent) {
+            $aff      = $agent->secAffectationActive;
+            $restDays = $aff ? (array) $aff->rest_days : [];
+            $offDays  = $aff ? (array) $aff->off_days  : [];
+
+            [$workDays, $reposDays] = $this->computeWorkRest($startDate, $endDate, $restDays, $offDays);
+
+            $joursPresents = \App\Models\SecPointageResponse::where('sec_pointage_responses.agent_id', $agent->id)
+                ->where('sec_pointage_responses.status', 'present')
+                ->join('sec_pointages', 'sec_pointages.id', '=', 'sec_pointage_responses.pointage_id')
+                ->where('sec_pointages.company_id', $company->id)
+                ->whereBetween('sec_pointages.date', [$startDate, $endDate])
+                ->selectRaw('COUNT(DISTINCT DATE(sec_pointages.date)) as cnt')
+                ->value('cnt') ?? 0;
+
+            $stats[] = [
+                'agent'            => $agent->name,
+                'zone'             => $aff?->poste?->zone?->name ?? $agent->zone?->name ?? '—',
+                'poste'            => $aff?->poste?->name ?? '—',
+                'jours_travailles' => (int) $joursPresents,
+                'jours_absents'    => max(0, $workDays - (int) $joursPresents),
+                'jours_repos'      => $reposDays,
+                'statut'           => '—',
+            ];
+        }
+
+        return view('client.securite.rapports.pdf_pointages', compact(
+            'company', 'stats', 'periodeLabel'
+        ));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Helpers privés
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private function parsePeriodeWeb(Request $request): array
+    {
+        if ($request->filled('jour')) {
+            $d = \Carbon\Carbon::parse($request->jour);
+            return [$d->toDateString(), $d->toDateString(), $d->translatedFormat('d F Y')];
+        }
+
+        $year  = (int) ($request->annee ?? now()->year);
+        $month = (int) ($request->mois  ?? now()->month);
+
+        if ($request->filled('mois')) {
+            $start = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+            $end   = $start->copy()->endOfMonth();
+            return [$start->toDateString(), $end->toDateString(), $start->translatedFormat('F Y')];
+        }
+
+        $start = \Carbon\Carbon::create($year, 1, 1)->startOfYear();
+        $end   = \Carbon\Carbon::create($year, 12, 31)->endOfYear();
+        return [$start->toDateString(), $end->toDateString(), (string) $year];
+    }
+
+    private function computeWorkRest(string $start, string $end, array $restDays, array $offDays): array
+    {
+        $current   = \Carbon\Carbon::parse($start);
+        $endDate   = \Carbon\Carbon::parse($end);
+        $workDays  = 0;
+        $reposDays = 0;
+
+        while ($current->lte($endDate)) {
+            $dow = $current->dayOfWeekIso;
+            $dom = $current->day;
+            if (in_array($dow, array_map('intval', $restDays))
+                || in_array($dom, array_map('intval', $offDays))) {
+                $reposDays++;
+            } else {
+                $workDays++;
+            }
+            $current->addDay();
+        }
+
+        return [$workDays, $reposDays];
+    }
+
     // ── Communications ────────────────────────────────────────────────────────
     public function communications()
     {

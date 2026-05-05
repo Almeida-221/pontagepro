@@ -106,6 +106,11 @@ Route::prefix('espace-client')->name('client.')->middleware(['auth', 'client'])-
         // Remplacements
         Route::get('/remplacements',                                      [SecuriteController::class, 'remplacements'])->name('remplacements');
         Route::delete('/remplacements/{remplacement}',                    [SecuriteController::class, 'destroyRemplacement'])->name('remplacements.destroy');
+        // Rapports avancés
+        Route::get('/rapports/remplacements',                             [SecuriteController::class, 'rapportRemplacements'])->name('rapports.remplacements');
+        Route::get('/rapports/remplacements/pdf',                         [SecuriteController::class, 'rapportRemplacementsPdf'])->name('rapports.remplacements.pdf');
+        Route::get('/rapports/pointages',                                 [SecuriteController::class, 'rapportPointagesAvances'])->name('rapports.pointages');
+        Route::get('/rapports/pointages/pdf',                             [SecuriteController::class, 'rapportPointagesPdf'])->name('rapports.pointages.pdf');
         // Communications
         Route::get('/communications',                                     [SecuriteController::class, 'communications'])->name('communications');
         Route::post('/communications',                                    [SecuriteController::class, 'storeCommunication'])->name('communications.store');
