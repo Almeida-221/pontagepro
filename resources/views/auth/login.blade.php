@@ -4,15 +4,23 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    @php
+        $loginLogo = \App\Models\SiteSetting::get('logo_path');
+        $loginName = \App\Models\SiteSetting::get('site_name', 'SB Pointage');
+    @endphp
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <div class="flex justify-center mb-4">
-            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
+            @if($loginLogo)
+                <img src="{{ asset('storage/' . $loginLogo) }}" alt="{{ $loginName }}" class="h-14 w-auto">
+            @else
+                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            @endif
         </div>
-        <h2 class="text-center text-3xl font-bold text-gray-900">SB Pointage</h2>
+        <h2 class="text-center text-3xl font-bold text-gray-900">{{ $loginName }}</h2>
         <p class="mt-2 text-center text-sm text-gray-600">Connectez-vous a votre compte</p>
     </div>
 

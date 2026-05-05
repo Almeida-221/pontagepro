@@ -14,15 +14,23 @@
 <div class="min-h-screen flex">
     <!-- Admin Sidebar -->
     <aside class="w-64 bg-slate-900 text-white flex-shrink-0 hidden md:flex flex-col">
+        @php
+            $adminLogo = \App\Models\SiteSetting::get('logo_path');
+            $adminName = \App\Models\SiteSetting::get('site_name', 'SB Pointage');
+        @endphp
         <div class="p-4 border-b border-slate-700">
             <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
+                @if($adminLogo)
+                    <img src="{{ asset('storage/' . $adminLogo) }}" alt="{{ $adminName }}" class="h-8 w-auto brightness-0 invert">
+                @else
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                @endif
                 <div>
-                    <span class="font-bold text-lg">SB Pointage</span>
+                    <span class="font-bold text-lg">{{ $adminName }}</span>
                     <span class="block text-xs text-blue-400">Administration</span>
                 </div>
             </a>

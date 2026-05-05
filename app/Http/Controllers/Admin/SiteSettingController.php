@@ -26,6 +26,9 @@ class SiteSettingController extends Controller
             'video_url'       => 'nullable|url|max:500',
             'appstore_url'    => 'nullable|url|max:500',
             'playstore_url'   => 'nullable|url|max:500',
+            'facebook_url'    => 'nullable|url|max:500',
+            'tiktok_url'      => 'nullable|url|max:500',
+            'youtube_url'     => 'nullable|url|max:500',
             'video_file'      => 'nullable|mimes:mp4,mov,avi,webm|max:204800',
             'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:10240',
             'app_phone1'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
@@ -39,7 +42,7 @@ class SiteSettingController extends Controller
         ]);
 
         // Simple text settings
-        foreach (['site_name', 'site_address', 'site_email', 'site_phone', 'whatsapp_number', 'video_url', 'appstore_url', 'playstore_url', 'bank_holder', 'bank_number', 'bank_name'] as $key) {
+        foreach (['site_name', 'site_address', 'site_email', 'site_phone', 'whatsapp_number', 'video_url', 'appstore_url', 'playstore_url', 'bank_holder', 'bank_number', 'bank_name', 'facebook_url', 'tiktok_url', 'youtube_url'] as $key) {
             SiteSetting::set($key, $request->input($key, ''));
         }
 
