@@ -178,55 +178,135 @@
                     </div>
 
                     {{-- Ciblage ──────────────────────────────────────────────── --}}
+                    @php
+                        $zonesJson  = $zones->map(fn($z) => ['id' => $z->id,   'label' => $z->name])->toJson();
+                        $postesJson = $postes->map(fn($p) => ['id' => $p->id,  'label' => $p->name])->toJson();
+                        $toursJson  = $tours->map(fn($t) => ['id' => $t->nom,  'label' => $t->emoji . ' ' . $t->nom])->toJson();
+                    @endphp
                     <div class="border-t border-gray-100 pt-4 space-y-3">
                         <p class="text-sm font-semibold text-gray-700">Destinataires</p>
                         <p class="text-xs text-gray-400">Laisser vide = envoyer à tous les agents</p>
 
-                        {{-- Zones --}}
+                        {{-- Multi-select Zones --}}
                         @if($zones->isNotEmpty())
-                        <div>
+                        <div x-data="{
+                            open: false,
+                            selected: [],
+                            items: {{ $zonesJson }},
+                            toggleAll() { this.selected = this.selected.length === this.items.length ? [] : this.items.map(i => i.id); },
+                            toggle(id) { const i = this.selected.indexOf(id); i >= 0 ? this.selected.splice(i, 1) : this.selected.push(id); },
+                            get label() { return this.selected.length === 0 ? 'Toutes les zones' : this.selected.length + ' zone(s) sélectionnée(s)'; }
+                        }" @click.outside="open = false" class="relative">
                             <label class="block text-xs font-medium text-gray-600 mb-1.5">Zones</label>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($zones as $z)
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" name="zone_ids[]" value="{{ $z->id }}"
+                            <button type="button" @click="open = !open"
+                                :class="selected.length ? 'border-purple-400 bg-purple-50' : 'border-gray-300 bg-white'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm focus:outline-none transition">
+                                <span :class="selected.length ? 'text-purple-700 font-medium' : 'text-gray-400'" x-text="label"></span>
+                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-150" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                                class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                                <label class="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-gray-50 border-b border-gray-100 select-none">
+                                    <input type="checkbox" :checked="selected.length === items.length && items.length > 0" @change="toggleAll()"
                                         class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
-                                    <span class="text-xs text-gray-700">{{ $z->name }}</span>
+                                    <span class="text-xs font-semibold text-gray-700">Tout sélectionner</span>
+                                    <span class="ml-auto text-xs text-gray-400" x-text="selected.length + '/' + items.length"></span>
                                 </label>
-                                @endforeach
+                                <div class="max-h-44 overflow-y-auto">
+                                    <template x-for="item in items" :key="item.id">
+                                        <label class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-purple-50 select-none transition">
+                                            <input type="checkbox" :checked="selected.includes(item.id)" @change="toggle(item.id)"
+                                                class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
+                                            <span class="text-xs text-gray-700" x-text="item.label"></span>
+                                        </label>
+                                    </template>
+                                </div>
                             </div>
+                            <template x-for="id in selected" :key="id">
+                                <input type="hidden" name="zone_ids[]" :value="id">
+                            </template>
                         </div>
                         @endif
 
-                        {{-- Postes --}}
+                        {{-- Multi-select Postes --}}
                         @if($postes->isNotEmpty())
-                        <div>
+                        <div x-data="{
+                            open: false,
+                            selected: [],
+                            items: {{ $postesJson }},
+                            toggleAll() { this.selected = this.selected.length === this.items.length ? [] : this.items.map(i => i.id); },
+                            toggle(id) { const i = this.selected.indexOf(id); i >= 0 ? this.selected.splice(i, 1) : this.selected.push(id); },
+                            get label() { return this.selected.length === 0 ? 'Tous les postes' : this.selected.length + ' poste(s) sélectionné(s)'; }
+                        }" @click.outside="open = false" class="relative">
                             <label class="block text-xs font-medium text-gray-600 mb-1.5">Postes</label>
-                            <div class="flex flex-wrap gap-2 max-h-28 overflow-y-auto pr-1">
-                                @foreach($postes as $p)
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" name="poste_ids[]" value="{{ $p->id }}"
+                            <button type="button" @click="open = !open"
+                                :class="selected.length ? 'border-purple-400 bg-purple-50' : 'border-gray-300 bg-white'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm focus:outline-none transition">
+                                <span :class="selected.length ? 'text-purple-700 font-medium' : 'text-gray-400'" x-text="label"></span>
+                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-150" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                                class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                                <label class="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-gray-50 border-b border-gray-100 select-none">
+                                    <input type="checkbox" :checked="selected.length === items.length && items.length > 0" @change="toggleAll()"
                                         class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
-                                    <span class="text-xs text-gray-700">{{ $p->name }}</span>
+                                    <span class="text-xs font-semibold text-gray-700">Tout sélectionner</span>
+                                    <span class="ml-auto text-xs text-gray-400" x-text="selected.length + '/' + items.length"></span>
                                 </label>
-                                @endforeach
+                                <div class="max-h-52 overflow-y-auto">
+                                    <template x-for="item in items" :key="item.id">
+                                        <label class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-purple-50 select-none transition">
+                                            <input type="checkbox" :checked="selected.includes(item.id)" @change="toggle(item.id)"
+                                                class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
+                                            <span class="text-xs text-gray-700" x-text="item.label"></span>
+                                        </label>
+                                    </template>
+                                </div>
                             </div>
+                            <template x-for="id in selected" :key="id">
+                                <input type="hidden" name="poste_ids[]" :value="id">
+                            </template>
                         </div>
                         @endif
 
-                        {{-- Tours --}}
+                        {{-- Multi-select Tours --}}
                         @if($tours->isNotEmpty())
-                        <div>
+                        <div x-data="{
+                            open: false,
+                            selected: [],
+                            items: {{ $toursJson }},
+                            toggleAll() { this.selected = this.selected.length === this.items.length ? [] : this.items.map(i => i.id); },
+                            toggle(id) { const i = this.selected.indexOf(id); i >= 0 ? this.selected.splice(i, 1) : this.selected.push(id); },
+                            get label() { return this.selected.length === 0 ? 'Tous les tours' : this.selected.length + ' tour(s) sélectionné(s)'; }
+                        }" @click.outside="open = false" class="relative">
                             <label class="block text-xs font-medium text-gray-600 mb-1.5">Tours</label>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($tours as $t)
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" name="tour_ids[]" value="{{ $t->nom }}"
+                            <button type="button" @click="open = !open"
+                                :class="selected.length ? 'border-purple-400 bg-purple-50' : 'border-gray-300 bg-white'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm focus:outline-none transition">
+                                <span :class="selected.length ? 'text-purple-700 font-medium' : 'text-gray-400'" x-text="label"></span>
+                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-150" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                                class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                                <label class="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-gray-50 border-b border-gray-100 select-none">
+                                    <input type="checkbox" :checked="selected.length === items.length && items.length > 0" @change="toggleAll()"
                                         class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
-                                    <span class="text-xs text-gray-700">{{ $t->emoji }} {{ $t->nom }}</span>
+                                    <span class="text-xs font-semibold text-gray-700">Tout sélectionner</span>
+                                    <span class="ml-auto text-xs text-gray-400" x-text="selected.length + '/' + items.length"></span>
                                 </label>
-                                @endforeach
+                                <div class="max-h-44 overflow-y-auto">
+                                    <template x-for="item in items" :key="item.id">
+                                        <label class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-purple-50 select-none transition">
+                                            <input type="checkbox" :checked="selected.includes(item.id)" @change="toggle(item.id)"
+                                                class="rounded border-gray-300 text-purple-600 focus:ring-purple-300">
+                                            <span class="text-xs text-gray-700" x-text="item.label"></span>
+                                        </label>
+                                    </template>
+                                </div>
                             </div>
+                            <template x-for="id in selected" :key="id">
+                                <input type="hidden" name="tour_ids[]" :value="id">
+                            </template>
                         </div>
                         @endif
                     </div>
