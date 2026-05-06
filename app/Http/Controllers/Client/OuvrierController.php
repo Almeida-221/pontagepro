@@ -68,7 +68,7 @@ class OuvrierController extends Controller
 
         $ouvriers = User::where('company_id', $company->id)
             ->where('role', 'worker')
-            ->where('is_active', true)
+            ->orderBy('is_active', 'desc')
             ->orderBy('name')
             ->get();
 

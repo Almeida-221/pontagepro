@@ -15,7 +15,7 @@
 {{-- Stats globales --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
     <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
-        <p class="text-2xl font-bold text-gray-900">{{ $ouvriers->count() }}</p>
+        <p class="text-2xl font-bold text-gray-900">{{ $ouvriers->where('is_active', true)->count() }}</p>
         <p class="text-xs text-gray-500 mt-1">Ouvriers actifs</p>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
@@ -60,7 +60,7 @@
 {{-- Liste Ouvriers --}}
 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h3 class="font-semibold text-gray-900">Ouvriers ({{ $ouvriers->count() }})</h3>
+        <h3 class="font-semibold text-gray-900">Ouvriers ({{ $ouvriers->where('is_active', true)->count() }} actifs / {{ $ouvriers->count() }} total)</h3>
     </div>
 
     @if($ouvriers->isEmpty())
@@ -80,14 +80,19 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @foreach($ouvriers as $o)
-                <tr class="hover:bg-gray-50">
+                <tr class="{{ $o->is_active ? 'hover:bg-gray-50' : 'bg-gray-50 opacity-70' }}">
                     <td class="px-4 py-3">
-                        <a href="{{ route('client.ouvriers.show', $o) }}" class="font-semibold text-gray-900 hover:text-blue-700">
-                            {{ $o->name }}
-                        </a>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('client.ouvriers.show', $o) }}" class="font-semibold {{ $o->is_active ? 'text-gray-900 hover:text-blue-700' : 'text-gray-400' }}">
+                                {{ $o->name }}
+                            </a>
+                            @if(!$o->is_active)
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-500 uppercase tracking-wide">Désactivé</span>
+                            @endif
+                        </div>
                         @if($o->phone)<p class="text-xs text-gray-400">{{ $o->phone }}</p>@endif
                     </td>
-                    <td class="px-4 py-3 text-gray-600">{{ $o->poste ?? '—' }}</td>
+                    <td class="px-4 py-3 {{ $o->is_active ? 'text-gray-600' : 'text-gray-400' }}">{{ $o->poste ?? '—' }}</td>
                     <td class="px-4 py-3 text-right font-medium text-gray-700">
                         {{ number_format($o->taux_journalier, 0, ',', ' ') }}
                     </td>
