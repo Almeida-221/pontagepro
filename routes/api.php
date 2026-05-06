@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
         Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
         Route::get('/attendance/today', [AttendanceController::class, 'today']);
+        Route::get('/attendance/recent', [AttendanceController::class, 'recent']);
         Route::get('/attendance/my', [AttendanceController::class, 'my']);
         Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy']);
 

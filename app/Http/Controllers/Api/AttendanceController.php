@@ -125,6 +125,22 @@ class AttendanceController extends Controller
         return response()->json(['records' => $records]);
     }
 
+    /** GET /attendance/recent  — last 50 records across all dates for activity feed */
+    public function recent(Request $request)
+    {
+        $user = $request->user();
+
+        $records = Attendance::with('worker')
+            ->where('company_id', $user->company_id)
+            ->orderByDesc('date')
+            ->orderByDesc('entry_time')
+            ->limit(50)
+            ->get()
+            ->map(fn($a) => $a->toApiArray());
+
+        return response()->json(['records' => $records]);
+    }
+
     /** DELETE /attendance/{id}  — admin cancels a record */
     public function destroy(Request $request, $id)
     {
