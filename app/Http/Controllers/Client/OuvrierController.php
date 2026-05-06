@@ -87,11 +87,12 @@ class OuvrierController extends Controller
 
         $totalMoisGagne = $ouvriers->sum(fn($o) => $this->montantGagne($o, $debutMois, $finMois));
         $totalMoisPaye  = $ouvriers->sum(fn($o) => $this->totalPaye($o->id, $debutMois, $finMois));
-        $totalSolde     = $ouvriers->sum(fn($o) => $this->montantGagne($o) - $this->totalPaye($o->id));
 
-        // Pré-calcul des soldes par ouvrier pour la vue
+        // Utilise users.balance (même source que l'app mobile) pour cohérence des totaux
+        $totalSolde = $ouvriers->sum(fn($o) => (float)($o->balance ?? 0));
+
         $soldes = $ouvriers->mapWithKeys(fn($o) => [
-            $o->id => $this->montantGagne($o) - $this->totalPaye($o->id),
+            $o->id => (float)($o->balance ?? 0),
         ]);
 
         return view('client.ouvriers.index', compact(
