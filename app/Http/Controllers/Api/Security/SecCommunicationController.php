@@ -16,6 +16,7 @@ class SecCommunicationController extends Controller
     {
         return [
             'id'         => $c->id,
+            'type'       => $c->type ?? 'audio',
             'title'      => $c->title,
             'message'    => $c->message,
             'audio_url'  => $c->audio_path
@@ -97,6 +98,7 @@ class SecCommunicationController extends Controller
         }
 
         $request->validate([
+            'type'       => 'nullable|in:audio,notification',
             'title'      => 'required|string|max:255',
             'message'    => 'nullable|string',
             'audio'      => 'nullable|file|mimetypes:audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/ogg,audio/webm,video/mp4|max:20480',
@@ -111,8 +113,11 @@ class SecCommunicationController extends Controller
             $audioPath = $request->file('audio')->store('communications', 'public');
         }
 
+        $type = $request->input('type', $audioPath ? 'audio' : 'notification');
+
         $communication = SecCommunication::create([
             'company_id' => $user->company_id,
+            'type'       => $type,
             'title'      => $request->title,
             'message'    => $request->message,
             'audio_path' => $audioPath,
@@ -178,12 +183,13 @@ class SecCommunicationController extends Controller
             }
 
             if (!empty($tokens)) {
+                $isNotif = ($communication->type === 'notification');
                 SendFcmNotifications::dispatchSync(
                     $tokens,
-                    '📢 ' . $communication->title,
-                    $communication->message ?? 'Nouveau message vocal',
+                    ($isNotif ? '🔔 ' : '📢 ') . $communication->title,
+                    $communication->message ?? ($isNotif ? '' : 'Nouveau message vocal'),
                     [
-                        'type'             => 'communication_new',
+                        'type'             => $isNotif ? 'admin_notification' : 'communication_new',
                         'communication_id' => (string) $communication->id,
                     ]
                 );

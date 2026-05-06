@@ -11,6 +11,7 @@ class SecCommunication extends Model
 
     protected $fillable = [
         'company_id',
+        'type',
         'title',
         'message',
         'audio_path',

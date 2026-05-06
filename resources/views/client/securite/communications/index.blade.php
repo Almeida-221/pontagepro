@@ -17,6 +17,7 @@
         <div class="lg:col-span-1">
             <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-5"
                 x-data="{
+                    tab: 'audio',
                     recording: false,
                     recorded: false,
                     seconds: 0,
@@ -73,6 +74,26 @@
                     Nouvelle communication
                 </h3>
 
+                {{-- Onglets Vocal / Notification --}}
+                <div class="flex rounded-xl overflow-hidden border border-gray-200">
+                    <button type="button" @click="tab='audio'"
+                        :class="tab==='audio' ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'"
+                        class="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z"/>
+                        </svg>
+                        Message vocal
+                    </button>
+                    <button type="button" @click="tab='notification'"
+                        :class="tab==='notification' ? 'bg-amber-500 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'"
+                        class="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold transition border-l border-gray-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        Notification
+                    </button>
+                </div>
+
                 @if($errors->any())
                 <div class="bg-red-50 border border-red-200 rounded-lg p-3">
                     <ul class="text-sm text-red-700 space-y-1 list-disc list-inside">
@@ -84,6 +105,7 @@
                 <form method="POST" action="{{ route('client.securite.communications.store') }}"
                     enctype="multipart/form-data" class="space-y-4">
                     @csrf
+                    <input type="hidden" name="type" :value="tab">
 
                     {{-- Titre --}}
                     <div>
@@ -101,8 +123,8 @@
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-purple-300 outline-none resize-none">{{ old('message') }}</textarea>
                     </div>
 
-                    {{-- Enregistrement vocal ──────────────────────────────── --}}
-                    <div>
+                    {{-- Enregistrement vocal (masqué en mode Notification) --}}
+                    <div x-show="tab==='audio'" x-cloak>
                         <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                             <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z"/>
@@ -217,11 +239,19 @@
                     </div>
 
                     <button type="submit"
-                        class="w-full bg-purple-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                        </svg>
-                        Envoyer aux agents
+                        :class="tab==='notification' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-purple-600 hover:bg-purple-700'"
+                        class="w-full text-white font-semibold px-5 py-2.5 rounded-lg transition flex items-center justify-center gap-2">
+                        <template x-if="tab==='notification'">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                        </template>
+                        <template x-if="tab==='audio'">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                        </template>
+                        <span x-text="tab==='notification' ? 'Envoyer la notification' : 'Envoyer aux agents'"></span>
                     </button>
                 </form>
             </div>
@@ -249,20 +279,31 @@
                     <div class="px-5 py-4 {{ $expired ? 'opacity-50' : '' }}">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex items-start gap-3 flex-1 min-w-0">
+                                @if(($c->type ?? 'audio') === 'notification')
+                                <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                    </svg>
+                                </div>
+                                @elseif($c->audio_path)
                                 <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    @if($c->audio_path)
                                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z"/>
                                     </svg>
-                                    @else
+                                </div>
+                                @else
+                                <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                                     </svg>
-                                    @endif
                                 </div>
+                                @endif
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 flex-wrap mb-1">
                                         <p class="font-semibold text-gray-900">{{ $c->title }}</p>
+                                        @if(($c->type ?? 'audio') === 'notification')
+                                        <span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 font-medium">🔔 Notification</span>
+                                        @endif
                                         @if($expired)
                                         <span class="text-xs bg-gray-100 text-gray-500 rounded-full px-2 py-0.5">Expirée</span>
                                         @else
