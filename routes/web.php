@@ -159,4 +159,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Vidéos publicitaires
     Route::resource('ad-videos', AdVideoController::class)->parameters(['ad-videos' => 'adVideo']);
     Route::post('ad-videos/{adVideo}/toggle', [AdVideoController::class, 'toggle'])->name('ad-videos.toggle');
+
+    // Notice client
+    Route::get('notice', fn() => view('admin.notice'))->name('notice');
 });
