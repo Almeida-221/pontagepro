@@ -43,11 +43,14 @@ class User extends Authenticatable
         'id_photo_back',
         'taux_journalier',
         'fcm_token',
+        'otp_code',
+        'otp_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'pin_code',
+        'otp_code',
         'remember_token',
     ];
 
@@ -55,6 +58,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'otp_expires_at'    => 'datetime',
             'password'          => 'hashed',
             'is_active'         => 'boolean',
         ];

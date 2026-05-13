@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -107,6 +108,8 @@ class CompanyUserController extends Controller
         ]);
 
         $user->load(['profession', 'category']);
+
+        SmsService::sendWelcomeMob($user);
 
         return response()->json([
             'message' => 'Compte créé avec succès',

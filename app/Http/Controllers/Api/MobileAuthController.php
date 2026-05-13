@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -204,6 +205,69 @@ class MobileAuthController extends Controller
                 'balance'      => (float) ($user->balance ?? 0),
             ],
         ]);
+    }
+
+    /**
+     * Envoie un OTP à 4 chiffres au numéro de l'utilisateur (première connexion).
+     */
+    public function sendOtp(Request $request)
+    {
+        $request->validate([
+            'phone'      => 'required|string',
+            'account_id' => 'nullable|integer',
+        ]);
+
+        $query = User::where('phone', $request->phone)
+            ->whereIn('role', ['company_admin', 'manager', 'worker'])
+            ->where('is_active', true)
+            ->whereNull('pin_code');
+
+        if ($request->account_id) {
+            $query->where('id', $request->account_id);
+        }
+
+        $user = $query->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Compte introuvable ou PIN déjà configuré.'], 404);
+        }
+
+        SmsService::sendOtp($user);
+
+        return response()->json(['message' => 'Code OTP envoyé par SMS.']);
+    }
+
+    /**
+     * Vérifie le code OTP saisi par l'utilisateur.
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'phone'      => 'required|string',
+            'account_id' => 'nullable|integer',
+            'otp'        => 'required|string|size:4|regex:/^[0-9]+$/',
+        ]);
+
+        $query = User::where('phone', $request->phone)
+            ->whereIn('role', ['company_admin', 'manager', 'worker'])
+            ->where('is_active', true)
+            ->whereNull('pin_code');
+
+        if ($request->account_id) {
+            $query->where('id', $request->account_id);
+        }
+
+        $user = $query->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Compte introuvable.'], 404);
+        }
+
+        if (!SmsService::verifyOtp($user, $request->otp)) {
+            return response()->json(['message' => 'Code OTP invalide ou expiré.'], 422);
+        }
+
+        return response()->json(['verified' => true, 'message' => 'Numéro vérifié avec succès.']);
     }
 
     public function changePin(Request $request)

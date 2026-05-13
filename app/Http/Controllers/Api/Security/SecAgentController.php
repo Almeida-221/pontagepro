@@ -8,6 +8,7 @@ use App\Models\SecNotification;
 use App\Models\SecPoste;
 use App\Models\User;
 use App\Services\FcmService;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -118,6 +119,8 @@ class SecAgentController extends Controller
                 ]);
             }
         }
+
+        SmsService::sendWelcomeSec($user);
 
         return response()->json($this->formatAgent($user->load('zone:id,name')), 201);
     }

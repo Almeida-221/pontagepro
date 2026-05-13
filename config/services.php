@@ -39,4 +39,16 @@ return [
         'project_id' => env('FIREBASE_PROJECT_ID'),
     ],
 
+    'sendtext' => [
+        'url'         => env('SENDTEXT_API_URL', 'https://api.sendtext.sn/v1/sms'),
+        'api_key'     => env('SENDTEXT_API_KEY'),
+        'api_secret'  => env('SENDTEXT_API_SECRET'),
+        'sender_name' => env('SENDTEXT_SENDER_NAME', 'EPSILON'),
+    ],
+
+    'app_downloads' => [
+        'mob' => env('APP_MOB_DOWNLOAD_URL'),
+        'sec' => env('APP_SEC_DOWNLOAD_URL'),
+    ],
+
 ];

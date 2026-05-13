@@ -28,9 +28,11 @@ use App\Http\Controllers\Api\Security\SecCommunicationController;
 use Illuminate\Support\Facades\Route;
 
 // Mobile authentication
-Route::post('/auth/check-phone', [MobileAuthController::class, 'checkPhone']);
+Route::post('/auth/check-phone',    [MobileAuthController::class, 'checkPhone']);
+Route::post('/auth/send-otp',       [MobileAuthController::class, 'sendOtp']);
+Route::post('/auth/verify-otp',     [MobileAuthController::class, 'verifyOtp']);
 Route::post('/auth/setup-password', [MobileAuthController::class, 'setupPassword']);
-Route::post('/auth/login', [MobileAuthController::class, 'login']);
+Route::post('/auth/login',          [MobileAuthController::class, 'login']);
 
 // Vidéos publicitaires – route publique (pas besoin d'auth)
 Route::get('/ad-videos', [AdVideoApiController::class, 'index']);
@@ -90,6 +92,8 @@ Route::prefix('securite')->name('securite.')->group(function () {
 
     // Auth (public)
     Route::post('/auth/check-phone',    [SecAuthController::class, 'checkPhone']);
+    Route::post('/auth/send-otp',       [SecAuthController::class, 'sendOtp']);
+    Route::post('/auth/verify-otp',     [SecAuthController::class, 'verifyOtp']);
     Route::post('/auth/setup-password', [SecAuthController::class, 'setupPassword']);
     Route::post('/auth/login',          [SecAuthController::class, 'login']);
 
