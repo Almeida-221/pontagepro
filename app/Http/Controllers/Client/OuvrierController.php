@@ -99,11 +99,22 @@ class OuvrierController extends Controller
             ->with(['categories' => fn($q) => $q->orderBy('name')])
             ->get();
 
+        // Tableau sérialisable pour le JS de la vue
+        $professionsJson = $professions->map(fn($p) => [
+            'id'         => $p->id,
+            'name'       => $p->name,
+            'categories' => $p->categories->map(fn($c) => [
+                'id'         => $c->id,
+                'name'       => $c->name,
+                'daily_rate' => (float) ($c->daily_rate ?? 0),
+            ])->values()->toArray(),
+        ])->values()->toArray();
+
         return view('client.ouvriers.index', compact(
             'company', 'ouvriers', 'gerants',
             'pointagesAujourdhui', 'today',
             'totalMoisGagne', 'totalMoisPaye', 'totalSolde', 'soldes',
-            'professions',
+            'professions', 'professionsJson',
         ));
     }
 

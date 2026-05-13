@@ -294,15 +294,7 @@
 
 <script>
 // Données professions / catégories injectées depuis le serveur
-const professionsData = @json($professions->map(fn($p) => [
-    'id'         => $p->id,
-    'name'       => $p->name,
-    'categories' => $p->categories->map(fn($c) => [
-        'id'         => $c->id,
-        'name'       => $c->name,
-        'daily_rate' => $c->daily_rate,
-    ])->values(),
-])->values());
+const professionsData = {!! json_encode($professionsJson) !!};
 
 function loadCategories(professionId) {
     const sel = document.getElementById('add-category');
