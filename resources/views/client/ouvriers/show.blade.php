@@ -10,16 +10,62 @@
 @endif
 
 {{-- En-tête fiche --}}
-<div class="bg-white rounded-xl border border-gray-200 p-6 flex items-start justify-between gap-4">
-    <div>
-        <h2 class="text-xl font-bold text-gray-900">{{ $ouvrier->name }}</h2>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $ouvrier->poste ?? 'Ouvrier' }} · {{ $ouvrier->phone ?? 'Pas de téléphone' }}</p>
-        <p class="text-sm text-gray-600 mt-1">Taux journalier : <strong>{{ number_format($ouvrier->taux_journalier, 0, ',', ' ') }} FCFA</strong></p>
+<div class="bg-white rounded-xl border border-gray-200 p-6 flex items-start gap-5">
+    {{-- Photo --}}
+    @if($ouvrier->photo)
+    <div class="flex-shrink-0">
+        <img src="{{ asset('storage/'.$ouvrier->photo) }}"
+             id="photo-full"
+             class="w-24 h-24 rounded-xl object-cover ring-2 ring-gray-200 cursor-zoom-in shadow"
+             onclick="document.getElementById('photo-overlay').classList.toggle('hidden')"
+             alt="{{ $ouvrier->name }}">
     </div>
-    <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $ouvrier->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
-        {{ $ouvrier->is_active ? 'Actif' : 'Inactif' }}
-    </span>
+    <div id="photo-overlay" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center" onclick="this.classList.add('hidden')">
+        <img src="{{ asset('storage/'.$ouvrier->photo) }}" class="max-w-md max-h-[90vh] rounded-xl shadow-2xl">
+    </div>
+    @else
+    <div class="w-24 h-24 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-3xl flex-shrink-0">
+        {{ strtoupper(substr($ouvrier->name, 0, 1)) }}
+    </div>
+    @endif
+    {{-- Infos --}}
+    <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-3">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900">{{ $ouvrier->name }}</h2>
+                <p class="text-sm text-gray-500 mt-0.5">{{ $ouvrier->poste ?? 'Ouvrier' }} · {{ $ouvrier->phone ?? 'Pas de téléphone' }}</p>
+                <p class="text-sm text-gray-600 mt-1">Taux journalier : <strong>{{ number_format($ouvrier->taux_journalier, 0, ',', ' ') }} FCFA</strong></p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 {{ $ouvrier->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
+                {{ $ouvrier->is_active ? 'Actif' : 'Inactif' }}
+            </span>
+        </div>
+    </div>
 </div>
+
+{{-- Pièces d'identité --}}
+@if($ouvrier->id_photo_front || $ouvrier->id_photo_back)
+<div class="bg-white rounded-xl border border-gray-200 p-5">
+    <h3 class="font-semibold text-gray-900 mb-4">Pièces d'identité</h3>
+    <div class="grid grid-cols-2 gap-4">
+        @foreach(['id_photo_front' => 'Recto', 'id_photo_back' => 'Verso'] as $field => $label)
+        @if($ouvrier->$field)
+        <div>
+            <p class="text-xs text-gray-500 mb-1">{{ $label }}</p>
+            <img src="{{ asset('storage/'.$ouvrier->$field) }}"
+                 class="w-full rounded-lg border border-gray-200 object-cover cursor-zoom-in shadow-sm"
+                 style="max-height:180px"
+                 onclick="this.nextElementSibling.classList.toggle('hidden')"
+                 alt="Pièce {{ $label }}">
+            <div class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center" onclick="this.classList.add('hidden')">
+                <img src="{{ asset('storage/'.$ouvrier->$field) }}" class="max-w-lg max-h-[90vh] rounded-xl shadow-2xl">
+            </div>
+        </div>
+        @endif
+        @endforeach
+    </div>
+</div>
+@endif
 
 {{-- Stats financières globales --}}
 <div class="grid grid-cols-3 gap-4">

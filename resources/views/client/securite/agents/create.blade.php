@@ -24,10 +24,22 @@
         contractType: '',
         restDays:     [],
         offDays:      [],
+        offStart:     '',
+        offEnd:       '',
         tours:        {},
         postesAll:    {{ $postesJson }},
         toggleRest(d) { this.restDays.includes(d) ? this.restDays = this.restDays.filter(x => x !== d) : this.restDays.push(d) },
-        toggleOff(d)  { this.offDays.includes(d)  ? this.offDays  = this.offDays.filter(x => x !== d)  : this.offDays.push(d) },
+        computeOffDays() {
+            this.offDays = [];
+            if (!this.offStart || !this.offEnd) return;
+            const s = new Date(this.offStart), e = new Date(this.offEnd);
+            if (s > e) return;
+            for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+                const day = d.getDate();
+                if (!this.offDays.includes(day)) this.offDays.push(day);
+            }
+            this.offDays.sort((a, b) => a - b);
+        },
         toggleTour(t) {
             if (this.tours[t]) { let c = {...this.tours}; delete c[t]; this.tours = c; }
             else { this.tours = {...this.tours, [t]: {type: t, start: '', end: ''}} }
@@ -224,27 +236,33 @@
             @endif
         </div>
 
-        {{-- Jours de congé --}}
+        {{-- Jours de congé (période) --}}
         <div>
-            <p class="text-sm font-semibold text-gray-700 mb-1">Jours de congé
-                <span class="font-normal text-gray-400">(du mois)</span>
+            <p class="text-sm font-semibold text-gray-700 mb-1">Période de congé
+                <span class="font-normal text-gray-400">(optionnel)</span>
             </p>
-            <p class="text-xs text-gray-400 mb-3">Jours spécifiques du mois où l'agent est en congé.</p>
-            <div class="flex flex-wrap gap-2">
-                @for($d = 1; $d <= 31; $d++)
+            <p class="text-xs text-gray-400 mb-3">Définissez une période de congé. Les jours intermédiaires seront calculés automatiquement.</p>
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <input type="checkbox" name="off_days[]" value="{{ $d }}"
-                        id="off_{{ $d }}" class="sr-only peer"
-                        @change="toggleOff({{ $d }})">
-                    <label for="off_{{ $d }}"
-                        class="w-10 h-10 flex items-center justify-center rounded-lg text-sm font-semibold cursor-pointer border-2 transition
-                               peer-checked:bg-orange-500 peer-checked:text-white peer-checked:border-orange-500
-                               border-gray-200 text-gray-600 hover:border-orange-400">
-                        {{ $d }}
-                    </label>
+                    <label class="text-xs font-medium text-gray-600 block mb-1">Date début congé</label>
+                    <input type="date" x-model="offStart" @change="computeOffDays()"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-orange-300 outline-none">
                 </div>
-                @endfor
+                <div>
+                    <label class="text-xs font-medium text-gray-600 block mb-1">Date fin congé</label>
+                    <input type="date" x-model="offEnd" @change="computeOffDays()"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-orange-300 outline-none">
+                </div>
             </div>
+            <template x-if="offDays.length > 0">
+                <div class="mt-3 bg-orange-50 border border-orange-200 rounded-lg px-4 py-2 text-sm text-orange-700">
+                    <span class="font-semibold" x-text="offDays.length + ' jour(s) de congé'"></span> :
+                    <span x-text="offDays.join(', ')"></span>
+                </div>
+            </template>
+            <template x-for="d in offDays" :key="d">
+                <input type="hidden" name="off_days[]" :value="d">
+            </template>
         </div>
     </div>
 

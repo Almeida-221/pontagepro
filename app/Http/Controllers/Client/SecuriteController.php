@@ -18,6 +18,7 @@ use App\Models\User;
 use Illuminate\Validation\Rule;
 use App\Jobs\SendFcmNotifications;
 use App\Services\FcmService;
+use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -310,8 +311,10 @@ class SecuriteController extends Controller
             }
         }
 
+        SmsService::sendWelcomeSec($agent);
+
         return redirect()->route('client.securite.agents')
-            ->with('success', "{$agent->name} ajouté avec succès.");
+            ->with('success', "{$agent->name} ajouté avec succès. Un SMS de bienvenue a été envoyé au {$agent->phone}.");
     }
 
     public function editAgent(User $agent)

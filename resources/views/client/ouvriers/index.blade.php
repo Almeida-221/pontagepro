@@ -82,15 +82,32 @@
                 @foreach($ouvriers as $o)
                 <tr class="{{ $o->is_active ? 'hover:bg-gray-50' : 'bg-gray-50 opacity-70' }}">
                     <td class="px-4 py-3">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-3">
+                            {{-- Avatar --}}
+                            @if($o->photo)
+                            <a href="{{ route('client.ouvriers.show', $o) }}" onclick="event.preventDefault(); document.getElementById('photo-modal-{{ $o->id }}').classList.remove('hidden')">
+                                <img src="{{ asset('storage/'.$o->photo) }}" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 cursor-zoom-in" alt="{{ $o->name }}">
+                            </a>
+                            {{-- Modal photo agrandie --}}
+                            <div id="photo-modal-{{ $o->id }}" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center" onclick="this.classList.add('hidden')">
+                                <img src="{{ asset('storage/'.$o->photo) }}" class="max-w-sm max-h-96 rounded-xl shadow-2xl">
+                            </div>
+                            @else
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm flex-shrink-0">
+                                {{ strtoupper(substr($o->name, 0, 1)) }}
+                            </div>
+                            @endif
+                            <div>
                             <a href="{{ route('client.ouvriers.show', $o) }}" class="font-semibold {{ $o->is_active ? 'text-gray-900 hover:text-blue-700' : 'text-gray-400' }}">
                                 {{ $o->name }}
                             </a>
                             @if(!$o->is_active)
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-500 uppercase tracking-wide">Désactivé</span>
                             @endif
+                            </a>
+                            @if($o->phone)<p class="text-xs text-gray-400">{{ $o->phone }}</p>@endif
+                            </div>
                         </div>
-                        @if($o->phone)<p class="text-xs text-gray-400">{{ $o->phone }}</p>@endif
                     </td>
                     <td class="px-4 py-3 {{ $o->is_active ? 'text-gray-600' : 'text-gray-400' }}">{{ $o->poste ?? '—' }}</td>
                     <td class="px-4 py-3 text-right font-medium text-gray-700">
