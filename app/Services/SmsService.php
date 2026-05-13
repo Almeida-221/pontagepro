@@ -41,15 +41,14 @@ class SmsService
 
         try {
             $response = Http::withHeaders([
-                'api_key'    => $cfg['api_key'],
-                'api_secret' => $cfg['api_secret'],
+                'Content-Type'   => 'application/json',
+                'SNT-API-KEY'    => $cfg['api_key'],
+                'SNT-API-SECRET' => $cfg['api_secret'],
             ])->post($cfg['url'], [
-                [
-                    'sender_name' => $cfg['sender_name'],
-                    'sms_type'    => 'normal',
-                    'phone'       => $phone,
-                    'text'        => $text,
-                ],
+                'sender_name' => $cfg['sender_name'],
+                'sms_type'    => 'normal',
+                'phone'       => $phone,
+                'text'        => $text,
             ]);
 
             if (!$response->successful()) {
