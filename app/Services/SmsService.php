@@ -108,7 +108,7 @@ class SmsService
             'otp_expires_at' => now()->addMinutes(10),
         ]);
 
-        $text = "Votre code d'activation SB est : {$otp}\nValable 10 minutes. Ne le partagez pas.";
+        $text = "Votre code d'activation SB Pointage est : {$otp}\nValable 10 minutes. Ne le partagez pas.";
         self::send($user->phone, $text);
     }
 
