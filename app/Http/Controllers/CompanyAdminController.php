@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HasActiveCompany;
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -55,8 +56,10 @@ class CompanyAdminController extends Controller
             'is_active'  => true,
         ]);
 
+        SmsService::sendWelcomeMob($admin);
+
         return redirect()->route('client.admins.index')
-            ->with('success', "Admin {$admin->name} créé. Il devra définir son code PIN lors de sa première connexion.");
+            ->with('success', "Admin {$admin->name} créé. Un SMS de bienvenue a été envoyé au {$admin->phone}.");
     }
 
     public function edit(User $admin)

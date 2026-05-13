@@ -184,7 +184,7 @@
 
 {{-- Modal Ajouter --}}
 <div id="modal-add" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5">
             <h2 class="text-lg font-bold text-gray-900">➕ Ajouter un membre</h2>
             <button onclick="document.getElementById('modal-add').classList.add('hidden')"
@@ -193,28 +193,49 @@
         <form method="POST" action="{{ route('client.ouvriers.store') }}" class="space-y-4">
             @csrf
             <div class="grid grid-cols-2 gap-4">
+                {{-- Nom --}}
                 <div class="col-span-2">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Nom complet *</label>
                     <input type="text" name="name" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300" required>
                 </div>
+                {{-- Téléphone --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Téléphone</label>
-                    <input type="text" name="phone" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300">
+                    <input type="text" name="phone" placeholder="7XXXXXXXX" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300">
                 </div>
+                {{-- Rôle --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Rôle *</label>
                     <select name="role" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300">
-                        <option value="ouvrier">Ouvrier</option>
-                        <option value="gerant_ouvrier">Gérant de chantier</option>
+                        <option value="worker">Ouvrier</option>
+                        <option value="manager">Gérant de chantier</option>
                     </select>
                 </div>
+                {{-- Profession --}}
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Poste / Métier</label>
-                    <input type="text" name="poste" placeholder="Maçon, Ferrailleur…" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Métier / Profession</label>
+                    <select id="add-profession" name="profession_id" onchange="loadCategories(this.value)"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300">
+                        <option value="">— Choisir un métier —</option>
+                        @foreach($professions as $p)
+                            <option value="{{ $p->id }}">{{ $p->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
+                {{-- Catégorie --}}
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Taux journalier (FCFA) *</label>
-                    <input type="number" name="taux_journalier" min="0" step="100" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300" required>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Catégorie</label>
+                    <select id="add-category" name="category_id" onchange="applyDailyRate(this)"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300">
+                        <option value="">— Choisir d'abord un métier —</option>
+                    </select>
+                </div>
+                {{-- Taux journalier --}}
+                <div class="col-span-2">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Taux journalier (FCFA)</label>
+                    <input type="number" id="add-taux" name="taux_journalier" min="0" step="100" placeholder="Rempli automatiquement selon la catégorie"
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300">
+                    <p class="text-xs text-gray-400 mt-1">Laissez vide pour utiliser le taux de la catégorie.</p>
                 </div>
             </div>
             <div class="flex gap-3 pt-2">
@@ -272,6 +293,40 @@
 </div>
 
 <script>
+// Données professions / catégories injectées depuis le serveur
+const professionsData = @json($professions->map(fn($p) => [
+    'id'         => $p->id,
+    'name'       => $p->name,
+    'categories' => $p->categories->map(fn($c) => [
+        'id'         => $c->id,
+        'name'       => $c->name,
+        'daily_rate' => $c->daily_rate,
+    ])->values(),
+])->values());
+
+function loadCategories(professionId) {
+    const sel = document.getElementById('add-category');
+    sel.innerHTML = '<option value="">— Choisir une catégorie —</option>';
+    if (!professionId) return;
+    const prof = professionsData.find(p => p.id == professionId);
+    if (!prof) return;
+    prof.categories.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.dataset.rate = c.daily_rate;
+        opt.textContent = c.name + (c.daily_rate ? ' (' + c.daily_rate.toLocaleString('fr-FR') + ' FCFA/j)' : '');
+        sel.appendChild(opt);
+    });
+}
+
+function applyDailyRate(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const rate = opt?.dataset?.rate;
+    if (rate) {
+        document.getElementById('add-taux').value = rate;
+    }
+}
+
 function openEdit(id, name, phone, poste, taux) {
     document.getElementById('edit-name').value  = name;
     document.getElementById('edit-phone').value = phone || '';

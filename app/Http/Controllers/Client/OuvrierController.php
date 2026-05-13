@@ -88,17 +88,22 @@ class OuvrierController extends Controller
         $totalMoisGagne = $ouvriers->sum(fn($o) => $this->montantGagne($o, $debutMois, $finMois));
         $totalMoisPaye  = $ouvriers->sum(fn($o) => $this->totalPaye($o->id, $debutMois, $finMois));
 
-        // Utilise users.balance (même source que l'app mobile) pour cohérence des totaux
         $totalSolde = $ouvriers->sum(fn($o) => (float)($o->balance ?? 0));
 
         $soldes = $ouvriers->mapWithKeys(fn($o) => [
             $o->id => (float)($o->balance ?? 0),
         ]);
 
+        $professions = \App\Models\Profession::where('company_id', $company->id)
+            ->orderBy('name')
+            ->with(['categories' => fn($q) => $q->orderBy('name')])
+            ->get();
+
         return view('client.ouvriers.index', compact(
             'company', 'ouvriers', 'gerants',
             'pointagesAujourdhui', 'today',
             'totalMoisGagne', 'totalMoisPaye', 'totalSolde', 'soldes',
+            'professions',
         ));
     }
 
@@ -107,22 +112,37 @@ class OuvrierController extends Controller
     {
         $company = $this->company();
         $v = $request->validate([
-            'name'           => 'required|string|max:150',
-            'phone'          => 'nullable|string|max:20',
-            'role'           => 'required|in:worker,manager',
-            'profession'     => 'nullable|string|max:100',
-            'taux_journalier'=> 'required|numeric|min:0',
+            'name'            => 'required|string|max:150',
+            'phone'           => 'nullable|string|max:20',
+            'role'            => 'required|in:worker,manager',
+            'profession_id'   => 'nullable|integer|exists:professions,id',
+            'category_id'     => 'nullable|integer|exists:worker_categories,id',
+            'taux_journalier' => 'nullable|numeric|min:0',
         ]);
 
-        User::create([
+        // Récupérer le taux depuis la catégorie si non saisi manuellement
+        $taux = $v['taux_journalier'] ?? 0;
+        if (!$taux && !empty($v['category_id'])) {
+            $cat = \App\Models\WorkerCategory::find($v['category_id']);
+            $taux = $cat?->daily_rate ?? 0;
+        }
+
+        $user = User::create([
             'name'            => $v['name'],
             'phone'           => $v['phone'] ?? null,
             'role'            => $v['role'],
             'company_id'      => $company->id,
-            'taux_journalier' => $v['taux_journalier'],
+            'profession_id'   => $v['profession_id'] ?? null,
+            'category_id'     => $v['category_id'] ?? null,
+            'taux_journalier' => $taux,
             'is_active'       => true,
             'password'        => Hash::make(Str::random(16)),
         ]);
+
+        // SMS de bienvenue si un numéro est renseigné
+        if ($user->phone) {
+            \App\Services\SmsService::sendWelcomeMob($user);
+        }
 
         return back()->with('success', "\"{$v['name']}\" ajouté.");
     }
@@ -144,6 +164,15 @@ class OuvrierController extends Controller
     {
         $company = $this->company();
         abort_if($ouvrier->company_id !== $company->id, 403);
+
+        // Bloquer si l'entreprise a encore des dettes envers l'ouvrier
+        if ((float) ($ouvrier->balance ?? 0) > 0) {
+            return back()->with('error',
+                "Impossible de supprimer \"{$ouvrier->name}\" : solde impayé de "
+                . number_format($ouvrier->balance, 0, ',', ' ') . " FCFA. Soldez d'abord les paiements en cours."
+            );
+        }
+
         $name = $ouvrier->name;
         $ouvrier->delete();
         return back()->with('success', "\"$name\" supprimé.");
@@ -153,6 +182,15 @@ class OuvrierController extends Controller
     {
         $company = $this->company();
         abort_if($ouvrier->company_id !== $company->id, 403);
+
+        // Bloquer la désactivation si l'ouvrier a un solde impayé
+        if ($ouvrier->is_active && (float) ($ouvrier->balance ?? 0) > 0) {
+            return back()->with('error',
+                "Impossible de désactiver \"{$ouvrier->name}\" : solde impayé de "
+                . number_format($ouvrier->balance, 0, ',', ' ') . " FCFA. Soldez d'abord les paiements en cours."
+            );
+        }
+
         $ouvrier->update(['is_active' => !$ouvrier->is_active]);
         $msg = $ouvrier->is_active ? "{$ouvrier->name} activé." : "{$ouvrier->name} désactivé.";
         return back()->with('success', $msg);
