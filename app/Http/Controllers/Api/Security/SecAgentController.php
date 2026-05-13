@@ -38,10 +38,11 @@ class SecAgentController extends Controller
     {
         if ($request->has('tours')) {
             $request->merge([
-                'tours' => array_map(
-                    fn($t) => array_merge($t, ['type' => strtolower($t['type'] ?? '')]),
-                    (array) $request->input('tours')
-                ),
+                'tours' => array_map(fn($t) => array_merge($t, [
+                    'type'  => strtolower($t['type'] ?? ''),
+                    'start' => substr($t['start'] ?? '', 0, 5),
+                    'end'   => substr($t['end']   ?? '', 0, 5),
+                ]), (array) $request->input('tours')),
             ]);
         }
 
@@ -273,10 +274,11 @@ class SecAgentController extends Controller
 
         if ($request->has('tours')) {
             $request->merge([
-                'tours' => array_map(
-                    fn($t) => array_merge($t, ['type' => strtolower($t['type'] ?? '')]),
-                    (array) $request->input('tours')
-                ),
+                'tours' => array_map(fn($t) => array_merge($t, [
+                    'type'  => strtolower($t['type'] ?? ''),
+                    'start' => substr($t['start'] ?? '', 0, 5),
+                    'end'   => substr($t['end']   ?? '', 0, 5),
+                ]), (array) $request->input('tours')),
             ]);
         }
 
