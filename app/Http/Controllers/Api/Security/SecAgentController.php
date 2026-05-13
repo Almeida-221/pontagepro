@@ -36,6 +36,15 @@ class SecAgentController extends Controller
     /** Create a gérant (admin only) or agent (admin or gérant). */
     public function store(Request $request)
     {
+        if ($request->has('tours')) {
+            $request->merge([
+                'tours' => array_map(
+                    fn($t) => array_merge($t, ['type' => strtolower($t['type'] ?? '')]),
+                    (array) $request->input('tours')
+                ),
+            ]);
+        }
+
         $validated = $request->validate([
             'name'           => 'required|string|max:150',
             'phone'          => 'required|string|max:20|unique:users,phone',
@@ -260,6 +269,15 @@ class SecAgentController extends Controller
 
         if ($agent->role !== 'agent_securite') {
             return response()->json(['message' => 'Seuls les agents peuvent avoir une affectation.'], 422);
+        }
+
+        if ($request->has('tours')) {
+            $request->merge([
+                'tours' => array_map(
+                    fn($t) => array_merge($t, ['type' => strtolower($t['type'] ?? '')]),
+                    (array) $request->input('tours')
+                ),
+            ]);
         }
 
         $validated = $request->validate([
