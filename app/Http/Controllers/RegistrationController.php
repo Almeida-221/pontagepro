@@ -191,7 +191,7 @@ class RegistrationController extends Controller
                 if (!$alreadyHasMobileAdmin) {
                     User::create([
                         'name'       => $ownerData['first_name'] . ' ' . $ownerData['last_name'],
-                        'email'      => $ownerData['email'],
+                        'email'      => null,
                         'phone'      => $mobilePhone,
                         'password'   => Hash::make(Str::random(16)),
                         'company_id' => $company->id,
