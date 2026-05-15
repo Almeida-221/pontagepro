@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name')) - {{ \App\Models\SiteSetting::get('site_name', 'SB Pointage') }}</title>
+    @php $faviconPath = \App\Models\SiteSetting::get('logo_path'); @endphp
+    @if($faviconPath)
+        <link rel="icon" type="image/png" href="{{ asset('storage/' . $faviconPath) }}">
+    @else
+        <link rel="icon" href="{{ asset('favicon.ico') }}">
+    @endif
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
