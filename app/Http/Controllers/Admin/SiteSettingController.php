@@ -47,7 +47,7 @@ class SiteSettingController extends Controller
         }
 
         // Payment method toggles (checkbox → 1 or 0)
-        foreach (['payment_orange_money', 'payment_wave', 'payment_visa', 'payment_bank'] as $key) {
+        foreach (['payment_orange_money', 'payment_wave', 'payment_visa', 'payment_bank', 'show_partners'] as $key) {
             SiteSetting::set($key, $request->has($key) ? '1' : '0');
         }
 

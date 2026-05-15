@@ -326,6 +326,25 @@
             </div>
         </div>
 
+        {{-- Section Partenaires --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-5 pb-3 border-b border-gray-100">
+                Nos Partenaires
+            </h2>
+            <p class="text-xs text-gray-500 mb-5">
+                Affiche automatiquement les logos (initiales) des entreprises abonnées et actives sur la page d'accueil.
+            </p>
+            <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 w-fit">
+                <input type="checkbox" name="show_partners" value="1"
+                    {{ !empty($settings['show_partners']) ? 'checked' : '' }}
+                    class="w-4 h-4 text-blue-600 rounded">
+                <div>
+                    <p class="text-sm font-medium text-gray-800">Afficher la section « Nos Partenaires »</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Les logos défilent automatiquement si les partenaires sont nombreux.</p>
+                </div>
+            </label>
+        </div>
+
         <div class="flex justify-end">
             <button type="submit"
                 class="bg-blue-600 text-white px-8 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition shadow-sm">

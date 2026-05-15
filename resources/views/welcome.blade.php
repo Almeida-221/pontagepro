@@ -884,6 +884,76 @@ function switchModule(panelId) {
     </div>
 </section>
 
+{{-- Section Nos Partenaires --}}
+@if(!empty($settings['show_partners']) && $partners->isNotEmpty())
+@php
+    $partnerColors  = ['#2563EB','#7C3AED','#059669','#DC2626','#D97706','#0891B2','#DB2777','#65A30D'];
+    $partnerColor   = fn($name) => $partnerColors[abs(crc32($name)) % count($partnerColors)];
+    $partnerInitials = function($name) {
+        $words = explode(' ', trim($name));
+        return count($words) >= 2
+            ? strtoupper(substr($words[0],0,1).substr($words[1],0,1))
+            : strtoupper(substr($name,0,2));
+    };
+    $showMarquee = $partners->count() > 5;
+    $items = $showMarquee ? $partners->concat($partners) : $partners;
+@endphp
+<section class="py-14 bg-white border-t border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+            <span class="inline-block bg-blue-50 text-blue-600 text-sm font-semibold px-4 py-1 rounded-full mb-3">Partenaires</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Ils nous font confiance</h2>
+            <p class="mt-2 text-gray-500 text-sm">Entreprises abonnées et actives sur SB Pointage</p>
+        </div>
+
+        @if($showMarquee)
+        {{-- Défilement automatique --}}
+        <div class="overflow-hidden relative">
+            <div class="flex gap-8 partner-marquee" style="width: max-content;">
+                @foreach($items as $partner)
+                @php $color = $partnerColor($partner->name); @endphp
+                <div class="flex flex-col items-center gap-2 w-24 flex-shrink-0">
+                    <div class="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md"
+                         style="background-color: {{ $color }};">
+                        {{ $partnerInitials($partner->name) }}
+                    </div>
+                    <p class="text-xs text-gray-600 text-center font-medium leading-tight">{{ Str::limit($partner->name, 20) }}</p>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @push('styles')
+        <style>
+        @keyframes marqueeScroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .partner-marquee {
+            animation: marqueeScroll {{ max(20, $partners->count() * 3) }}s linear infinite;
+        }
+        .partner-marquee:hover { animation-play-state: paused; }
+        </style>
+        @endpush
+
+        @else
+        {{-- Affichage centré (peu de partenaires) --}}
+        <div class="flex flex-wrap justify-center gap-8">
+            @foreach($partners as $partner)
+            @php $color = $partnerColor($partner->name); @endphp
+            <div class="flex flex-col items-center gap-2 w-24">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md"
+                     style="background-color: {{ $color }};">
+                    {{ $partnerInitials($partner->name) }}
+                </div>
+                <p class="text-xs text-gray-600 text-center font-medium leading-tight">{{ Str::limit($partner->name, 20) }}</p>
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </div>
+</section>
+@endif
+
 {{-- Video Modal --}}
 @php $hasVideo = !empty($settings['video_path']) || !empty($settings['video_url']); @endphp
 @if($hasVideo)
